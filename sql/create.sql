@@ -7,7 +7,9 @@ CREATE TABLE Photo (
 )
 
 CREATE TABLE GameRoom (
-	-- all new Ids userIds GameRoomIDs
+	-- all new Ids userIds PlayersInGame.  
+	-- 		alternate approach is to serialize the list of ids in one variable
+	--		but you don't do that in normalized relational dtabases.
 	-- photos
 	counter int, -- paparazzi counter
 	gameId int,
@@ -17,7 +19,7 @@ CREATE TABLE GameRoom (
 	paparazzi int
 )
 
-CREATE TABLE GameRoomIDs (
+CREATE TABLE PlayersInGame (
 	gameId int,
 	numPlayers int,
 	id1 varchar(20), 
@@ -36,10 +38,11 @@ CREATE TABLE User (
 	userId varchar(20),
 	first varchar(20),
 	last varchar(20),
-) ENGINE = INNODB 
+)
 
-CREATE TABLE Message (
+CREATE TABLE Messages (
 	userId varchar(20),
 	gameId int,
+	sendTime timestamp,
 	message varchar(50)
 )
