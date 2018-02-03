@@ -4,7 +4,7 @@
 CREATE TABLE Photo (
 	personInPhoto varchar(20),
 	score int
-)
+);
 
 CREATE TABLE GameRoom (
 	-- all new Ids userIds PlayersInGame.  
@@ -16,8 +16,9 @@ CREATE TABLE GameRoom (
 	startTime timestamp,
 	-- all chat messages
 	gameRm varchar(20), -- game room name
-	paparazzi int
-)
+	paparazzi int,
+	PRIMARY KEY(gameId)
+);
 
 CREATE TABLE PlayersInGame (
 	gameId int,
@@ -32,17 +33,20 @@ CREATE TABLE PlayersInGame (
 	id8 varchar(20), 
 	id9 varchar(20), 
 	id10 varchar(20), 
-)
+	PRIMARY KEY(gameId)
+);
 
 CREATE TABLE User (
 	userId varchar(20),
 	first varchar(20),
 	last varchar(20),
-)
+	PRIMARY KEY(userId)
+);
 
 CREATE TABLE Messages (
 	userId varchar(20),
 	gameId int,
 	sendTime timestamp,
 	message varchar(50)
-)
+	-- key for this could be userId or gameId
+);
