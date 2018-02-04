@@ -36,7 +36,7 @@ CREATE TABLE PlayersInGame (
 	PRIMARY KEY(gameId)
 );
 
-CREATE TABLE User (
+CREATE TABLE Users (
 	userId varchar(20),
 	first varchar(20),
 	last varchar(20),
