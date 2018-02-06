@@ -1,24 +1,30 @@
+import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.Scanner;
-import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.sun.net.httpserver.HttpServer;
 
 public class Launcher {
 
-	public static void main(String[] args) {
-		AtomicBoolean exit = new AtomicBoolean(false);
+	public static void main(String[] args) throws IOException {
+		HttpServer server = HttpServer.create(new InetSocketAddress(HelperTestClasses.port),0);
+		server.createContext(HelperTestClasses.context[0], new LoginHandler());
+		server.setExecutor(null);
+		server.start();
 		
-		AppServer server = new AppServer(5555,exit);
-		new Thread(server).start();
+		System.out.println("HTTP Server started...");
 		
 		Scanner getConsoleInput = new Scanner(System.in);
-		String get;
 		
-		while((get = getConsoleInput.nextLine()).equals("exit") == false) {
-			System.out.println(get);
+		while(getConsoleInput.nextLine().equals("exit") == false) {
+			System.out.println("Unrecognized command");
+			System.out.println("Recognized commands: exit");
 		}
 
+		System.out.println("Server will stop after 10 seconds...");
+		server.stop(10);
 		getConsoleInput.close();
-		exit.set(true);
-		System.out.println("Launcher exiting...");
+		System.out.println("Launcher exited...");
 	}
 
 }

@@ -4,3 +4,21 @@ To test:
 -json simple library required
 -launch launcher.java first then clientTester.java
 -modify variable settings in HelperTestClasses.java
+
+2/6/2018
+Simple back end server now using HTTP protocol. Still only handles player JSON request.
+To test:
+-json simple library required
+-need to access com.sun.httpserver
+-launch Launcher.java first then ClientTester.java
+-modify variable settings in HelperTestClasses.java
+
+Added:
+uses HTTP protocol
+now handles player request by specifying http://<ip>:<port>/<context>
+	where <ip> is IP found in HelperTestClasses
+	where <port> is port found in HelperTestClasses
+	where <context> is found in HelperTestClasses
+
+Removed:
+removed AppServer.java as raw sockets are not needed anymore
