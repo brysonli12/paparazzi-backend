@@ -1,5 +1,6 @@
 import java.sql.*;     // Use classes in java.sql package
- 
+import org.json.simple.JSONObject; 
+import org.json.JSONArray;  
 
 class ConnectionManager {
     private static final String URL = "jdbc:mysql://localhost:3306/ebookshop?useSSL=false";
@@ -36,36 +37,103 @@ class DatabaseUtils {
 
   }
 
-  // sample query purely based on tutorial code
-  // temporarily left here just for reference
-  public void makeQuery()
+    /**
+     * Convert a result set into a JSON Array
+     * @param resultSet
+     * @return a JSONArray
+     * @throws Exception
+     */
+    public static JSONArray convertToJSON(ResultSet resultSet)
+            throws Exception {
+        JSONArray jsonArray = new JSONArray();
+        while (resultSet.next()) {
+            int total_rows = resultSet.getMetaData().getColumnCount();
+            for (int i = 0; i < total_rows; i++) {
+                JSONObject obj = new JSONObject();
+                obj.put(resultSet.getMetaData().getColumnLabel(i + 1)
+                        .toLowerCase(), resultSet.getObject(i + 1));
+                jsonArray.put(obj);
+            }
+        }
+        return jsonArray;
+    }
+
+
+
+  public boolean doesUserExist(String uId)
+  {
+    try
+      {
+        stmt =  conn.createStatement();
+        ResultSet userExists = stmt.executeQuery("select * from Player where userId = '" + uId + "'");
+        if (!userExists.next()) // if not found
+        {
+          return false;
+        }
+        return true;
+      } catch(SQLException ex) {
+           ex.printStackTrace();
+      }
+  }
+
+  public JSONObject login(String uId, String first, String last)
+  {
+    JSONObject result = new JSONObject();
+    JSONObject playInfo = new JSONObject();
+    playInfo.put("firstName", first);
+    playInfo.put("lastName", last);
+    playInfo.put("facebookUserId", uId);
+    result.put("Player", playInfo);
+    try
+    {
+      ResultSet userExists = stmt.executeQuery("select * from Player where userId = '" + uId + "'");
+      if (userExists.next())
+      {
+        if (!userExists.getString("first").equals(first) || !userExists.getString("last").equals(last))
+          updateUser(uId, first, last);
+        result.put("loginStatus", "returningPlayer");
+      }
+      else
+      {
+        insertNewUser(uId, first, last);
+        result.put("loginStatus", "newPlayer");
+      }
+    } catch (SQLException ex) {
+      result.put("loginStatus", "failed");
+      return result;
+      //return ex.printStackTrace();
+    }
+  }
+
+  public JSONArray getGames()
+  {
+    try
+      {
+        stmt =  conn.createStatement();
+         ResultSet games = stmt.executeQuery("select * from Game");
+
+           JSONArray userGames = convertToJSON(games);
+           return userGames;
+         } catch(SQLException ex) {
+           ex.printStackTrace();
+        }
+  }
+  
+  public int makeUpdateQuery(String strUpdate)
   {
       try
       {
         stmt =  conn.createStatement();
-         // Step 3 & 4: Execute a SQL UPDATE via executeUpdate()
-         //   which returns an int indicating the number of rows affected.
-         // Increase the price by 7% and qty by 1 for id=1001
-         String strUpdate = "update books set price = price*0.7, qty = qty+1 where id = 1001";
+
          System.out.println("The SQL query is: " + strUpdate);  // Echo for debugging
          int countUpdated = stmt.executeUpdate(strUpdate);
          System.out.println(countUpdated + " records affected.");
- 
-         // Step 3 & 4: Issue a SELECT to check the UPDATE.
-         String strSelect = "select * from books where id = 1001";
-         System.out.println("The SQL query is: " + strSelect);  // Echo for debugging
-         ResultSet rset = stmt.executeQuery(strSelect);
-         while(rset.next()) {   // Move the cursor to the next row
-            System.out.println(rset.getInt("id") + ", "
-                    + rset.getString("author") + ", "
-                    + rset.getString("title") + ", "
-                    + rset.getDouble("price") + ", "
-                    + rset.getInt("qty"));
-         }
+         return countUpdated;
       } catch(SQLException ex) {
          ex.printStackTrace();
       }
   }
+
 
   /**
    * Makes a request to the database to update a user's
@@ -79,8 +147,8 @@ class DatabaseUtils {
   public int updateUser(String id, String first, String last)
   {
     try {
-
-        String strUpdate = "UPDATE users SET first = '" + first + 
+        stmt =  conn.createStatement();
+        String strUpdate = "UPDATE Player SET first = '" + first + 
                           "', last = '" + last + 
                           "' WHERE userId = " + "'" + id + "'";
          System.out.println("The SQL query is: " + strUpdate);  // Echo for debugging
@@ -105,7 +173,8 @@ class DatabaseUtils {
   public int insertNewUser(String id, String first, String last)
   {
     try {
-        String sqlInsert = "insert into users " // need a space
+        stmt =  conn.createStatement();
+        String sqlInsert = "insert into Player " // need a space
                + "values (\'"+ id + "\', \'" + first + "\', \'" + last + "\')";
          System.out.println("The SQL query is: " + sqlInsert);  // Echo for debugging
          int countInserted = stmt.executeUpdate(sqlInsert);
@@ -119,9 +188,9 @@ class DatabaseUtils {
 
    public static void main(String[] args) {
       DatabaseUtils db_utils = new DatabaseUtils();
-      db_utils.makeQuery();
-      System.out.println("second time");
-      db_utils.makeQuery();
+      //db_utils.makeQuery();
+      //System.out.println("second time");
+      //db_utils.makeQuery();
       //db_utils.insertNewUser("UserID1", "U1_first", "U1_last");
       db_utils.updateUser("UserID1", "U1_first", "new_last");
    }
