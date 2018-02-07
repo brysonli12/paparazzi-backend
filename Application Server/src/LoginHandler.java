@@ -36,7 +36,8 @@ public class LoginHandler implements HttpHandler{
 				if(requestType == -1) {
 					data = null;
 				}else {
-					data = HelperTestClasses.randomLoginResponseClass(request);
+					Database x = new Database();
+					data = x.login(request);//HelperTestClasses.randomLoginResponseClass(request);
 				}
 				
 			}catch(ParseException e) {
