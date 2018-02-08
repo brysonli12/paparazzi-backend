@@ -23,7 +23,8 @@ public class ClientTester {
 
 			connect.setDoOutput(true);
 			
-			JSONObject playerJSON = HelperTestClasses.randomPlayerClass();
+			JSONObject playerJSON = new JSONObject();
+			playerJSON.put("Player", HelperTestClasses.randomPlayerClass());
 			Thread.sleep(1000 * HelperTestClasses.randomSleep());
 			
 			OutputStreamWriter os = new OutputStreamWriter(connect.getOutputStream());

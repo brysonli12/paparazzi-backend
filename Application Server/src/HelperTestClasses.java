@@ -57,9 +57,9 @@ public class HelperTestClasses {
 		player.put("facebookUserId", facebookUserId);
 		player.put("firstName", firstName);
 		player.put("lastName", lastName);
-		testerPlayer.put("Player", player);
+		//testerPlayer.put("Player", player);
 		
-		return testerPlayer;
+		return player;//testerPlayer;
 
 	}
 
@@ -79,9 +79,9 @@ public class HelperTestClasses {
 		gameInfo.put("gameRoomName", gameRoomName);
 		gameInfo.put("playerCount", passedMaxPlayerCount);
 		gameInfo.put("gameDuration", 24*60*60*rand.nextInt(maxDurationDays));
-		game.put("GameInfo", gameInfo);
+		//game.put("GameInfo", gameInfo);
 		
-		return game;
+		return gameInfo;
 	}
 
 	public static JSONArray randomMessageClass() {
@@ -121,7 +121,7 @@ public class HelperTestClasses {
 
 	public static JSONObject randomLoginResponseClass(JSONObject player) {
 		JSONObject data = new JSONObject();
-		JSONObject games = HelperTestClasses.randomGamesClass();
+		JSONArray games = HelperTestClasses.randomGamesClass();
 		Random rand = new Random();
 
 		String getStatus = playerStatus[rand.nextInt(3)];
@@ -139,7 +139,7 @@ public class HelperTestClasses {
 		return data;
 	}
 
-	public static JSONObject randomGamesClass() {
+	public static JSONArray randomGamesClass() {
 		JSONObject game = new JSONObject();
 		JSONArray gamesArray = new JSONArray();
 		Random rand = new Random();
@@ -165,9 +165,9 @@ public class HelperTestClasses {
 			gamesArray.add(gamesData);
 		}
 		
-		game.put("Game", gamesArray);
+		//game.put("Game", gamesArray);
 
-		return game;
+		return gamesArray;
 	}
 
 	public static int randomSleep() {

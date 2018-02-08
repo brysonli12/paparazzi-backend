@@ -1,4 +1,6 @@
 import java.sql.*;     // Use classes in java.sql package
+
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject; 
 //import org.json.JSONArray;  
 
@@ -98,8 +100,8 @@ class Database {
 		String first = (String) playInfo.get("firstName");
 		String last = (String) playInfo.get("lastName");
 		JSONObject result = new JSONObject();
-		result.put("player", req);
-		games.put("games", "null");
+		result.put("player", playInfo);
+		//games.put("games", "null");
 		
 		System.out.println(uId + " " + first + " " + last);
 		
@@ -114,25 +116,27 @@ class Database {
 					updateUser(uId, first, last);
 				}
 				result.put("loginStatus", "returningPlayer");
-				games = HelperTestClasses.randomGamesClass();
+				result.put("games", HelperTestClasses.randomGamesClass());
 			}
 			else
 			{
 				insertNewUser(uId, first, last);
 				result.put("loginStatus", "newPlayer");
+				games.put("games", "null");
 			}
 		} catch (SQLException ex) {
 			result.put("loginStatus", "failed");
+			result.put("games","null");
 			return result;
 			//return ex.printStackTrace();
 		}
 		
 		
-		result.put("games", games);
+		//result.put("games", games);
 		return result;
 	}
 
-	public JSONObject getGames()
+	public JSONArray getGames()
 	{
 		return HelperTestClasses.randomGamesClass();	  
 	}
