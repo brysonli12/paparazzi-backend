@@ -37,7 +37,7 @@ class Database {
 
 	}
 
-	public JSONObject request(JSONObject obj, int requestType)
+	public JSONObject handleRequest(JSONObject obj, int requestType)
 	{
 		switch(requestType)
 		{
