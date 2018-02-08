@@ -29,6 +29,8 @@ public class HelperBuilderClass {
 			case 1:
 				//response.put("LoginResponse", data);
 				return data;
+			case 2:
+				return data;
 			default:
 				response.put("error", "Invalid Request");
 				return response;

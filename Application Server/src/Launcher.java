@@ -9,6 +9,7 @@ public class Launcher {
 	public static void main(String[] args) throws IOException {
 		HttpServer server = HttpServer.create(new InetSocketAddress(HelperTestClasses.port),0);
 		server.createContext(HelperTestClasses.context[0], new LoginHandler());
+		server.createContext(HelperTestClasses.context[1], new RetrieveGameHandler());
 		server.setExecutor(null);
 		server.start();
 		

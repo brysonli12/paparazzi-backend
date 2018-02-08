@@ -22,3 +22,11 @@ now handles player request by specifying http://<ip>:<port>/<context>
 
 Removed:
 removed AppServer.java as raw sockets are not needed anymore
+
+2/7/2018:
+Separated login and get games functions (added /getgames)
+Login working.  Getgames working but frontend needs to fix something
+Changed related functions JSONObject response to communicate with frontend
+
+Added:
+retrieve game handler to separate login/ get games. 

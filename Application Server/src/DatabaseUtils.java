@@ -2,7 +2,6 @@ import java.sql.*;     // Use classes in java.sql package
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject; 
-//import org.json.JSONArray;  
 
 class ConnectionManager {
 	private static final String URL = "jdbc:mysql://localhost:3306/ebookshop?useSSL=false";
@@ -45,6 +44,10 @@ class Database {
 		{
 		case 1:
 			return login(obj);
+		case 2:
+			JSONObject t = new JSONObject();
+			t.put("games",getGames(obj));
+			return t;
 		}
 		return null;
 
@@ -92,8 +95,6 @@ class Database {
 
 	public JSONObject login(JSONObject req)
 	{
-		// iterate over JSONObject and find the fields for id, first, last name
-		//req.keySet().
 		JSONObject games = new JSONObject();
 		JSONObject playInfo = (JSONObject) req.get("Player");
 		String uId = (String) playInfo.get("facebookUserId");
@@ -136,7 +137,7 @@ class Database {
 		return result;
 	}
 
-	public JSONArray getGames()
+	public JSONArray getGames(JSONObject obj)
 	{
 		return HelperTestClasses.randomGamesClass();	  
 	}
@@ -223,10 +224,8 @@ class Database {
 	}
 
 	public static void main(String[] args) {
+		// Some Manual testing
 		//DatabaseUtils db_utils = new DatabaseUtils();
-		//db_utils.makeQuery();
-		//System.out.println("second time");
-		//db_utils.makeQuery();
 		//db_utils.insertNewUser("UserID1", "U1_first", "U1_last");
 		//db_utils.updateUser("UserID1", "U1_first", "new_last");
 	}
