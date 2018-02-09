@@ -47,12 +47,16 @@ public class LoginHandler implements HttpHandler{
 			}
 			
 			//Send back JSONObject or a push notification
-			JSONObject response = HelperBuilderClass.buildResponse(requestType, data);
-			byte[] responseBytes = response.toString().getBytes();
+			JSONObject response = new JSONObject();// = HelperBuilderClass.buildResponse(requestType, data);
+			byte[] responseBytes; //= response.toString().getBytes();
 			
 			if(requestType == -1 || data == null) {
+				response.put("loginStatus","failed");
+				responseBytes = response.toString().getBytes();
 				t.sendResponseHeaders(400, responseBytes.length);
 			}else {
+				response.put("loginStatus", "newPlayer");
+				responseBytes = response.toString().getBytes();
 				t.sendResponseHeaders(200, responseBytes.length);
 			}
 			
