@@ -180,36 +180,40 @@ class Database {
 		}
 		return result;
 	}
-	/*
-  public JSONArray getGames()
-  {
-    try
-      {
-        stmt =  conn.createStatement();
-         ResultSet games = stmt.executeQuery("select * from Game");
-
-           JSONArray userGames = convertToJSON(games);
-           return userGames;
-         } catch(SQLException ex) {
-           ex.printStackTrace();
-        }
-  }
-	 */
-	/*public int makeUpdateQuery(Prepare)
-  {
-      try
-      {
-        stmt =  conn.createStatement();
-
-         System.out.println("The SQL query is: " + strUpdate);  // Echo for debugging
-         int countUpdated = stmt.executeUpdate(strUpdate);
-         System.out.println(countUpdated + " records affected.");
-         return countUpdated;
-      } catch(SQLException ex) {
-         ex.printStackTrace();
-      }
-  }*/
-
+	
+	private JSONArray _getGames()
+	{
+	      JSONArray allGames = new JSONArray();
+	      try
+	      {
+		stmt =  conn.createStatement();
+		 ResultSet games = stmt.executeQuery("select * from Game");
+			 while (games.next()) {	
+				 JSONObject oneGame = new JSONObject();
+				 JSONObject gameInf = new JSONObject();
+				 gameInf.put("gameRoomName", games.getString("gameRoomName");
+				 gameInf.put("gameDuration", games.getString("gameDuration"); // getInt?
+			         gameInf.put("playerCount", games.getString("playerCount"); // getInt?
+				
+				String playIds =  game.getString("playerIds");
+					     
+				// possible try/catch block here to catch parsing/ formatting errors
+			 	JSONArray pIds = new JSONArray(playIds);
+				JSONArray playersInGame = getPlayers(pIds);
+		   		//JSONArray userGames = convertToJSON(games);
+				oneGame.put("gameInfo", gameInf);
+				oneGame.put("players", playersInGame);
+				oneGame.put("gameId", games.getString("gameId"));
+					     
+				// get all messages here
+					     
+				allGames.put(oneGame);
+		   		
+		 	}
+		 } catch(SQLException ex) {
+		   ex.printStackTrace();
+		}
+	}
 
 	/**
 	 * Makes a request to the database to update a user's
