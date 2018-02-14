@@ -169,7 +169,7 @@ class Database {
 				{
 					onePlayer.put("firstName", "null");
 					onePlayer.put("lastName", "null:);
-					onePlayer.put("facebookUserId", aUser.getString("userId"));
+					onePlayer.put("facebookUserId", (string)obj);
 				}
 				result.put(onePlayer);
 			}
