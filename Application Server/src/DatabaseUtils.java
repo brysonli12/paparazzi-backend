@@ -52,14 +52,14 @@ class Database {
 		return null;
 
 	}
-	/*
-    /**
-	 * Convert a result set into a JSON Array
-	 * @param resultSet
-	 * @return a JSONArray
-	 * @throws Exception
-	 */
-	/*  public static JSONArray convertToJSON(ResultSet resultSet)
+	/**
+     * Convert a result set into a JSON Array
+     * @param resultSet
+     * @return a JSONArray
+     * @throws Exception
+     * @author marlonlom (link in References file)
+     */
+    public JSONArray convertToJSON(ResultSet resultSet)
             throws Exception {
         JSONArray jsonArray = new JSONArray();
         while (resultSet.next()) {
@@ -73,7 +73,6 @@ class Database {
         }
         return jsonArray;
     }
-	 */
 
 
 	public boolean doesUserExist(String uId)
