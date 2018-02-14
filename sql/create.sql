@@ -33,7 +33,7 @@ CREATE TABLE Player (
 );
 
 CREATE TABLE Messages (
-	msgId varchar
+	msgId varchar(30,
 	sentFrom varchar(30), -- userid
 	gameId int,
 	sendTime timestamp,
