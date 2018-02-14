@@ -140,6 +140,46 @@ class Database {
 	{
 		return HelperTestClasses.randomGamesClass();	  
 	}
+	
+	/**
+	 * Return a JSONArray of players (JSONObjects)
+	 *
+	 * @param plays JSONArray list of playerUserIds (should not be a string) 
+	 *		unserialize before passing to the function
+	 * @return      the JSONArrays of players in a specified format
+	 */
+	private JSONArray getPlayers(JSONArray plays)
+	{
+		JSONArray result = new JSONArray();
+		try
+		{
+			stmt =  conn.createStatement();
+			for (Object obj: plays)
+			{
+				JSONObject onePlayer = new JSONObject();
+				System.out.println("QUERY: select * from Player where userId = '" + (string)obj + "'");
+				ResultSet aUser = stmt.executeQuery("select * from Player where userId = '" + (string)obj + "'");
+				if (aUser.next())
+				{
+					onePlayer.put("firstName", aUser.getString("first"));
+					onePlayer.put("lastName", aUser.getString("last"));
+					onePlayer.put("facebookUserId", aUser.getString("userId"));
+				}
+				else
+				{
+					onePlayer.put("firstName", "null");
+					onePlayer.put("lastName", "null:);
+					onePlayer.put("facebookUserId", aUser.getString("userId"));
+				}
+				result.put(onePlayer);
+			}
+		} catch (SQLException ex) {
+			result.put("SQLException");
+			return result;
+			//return ex.printStackTrace();
+		}
+		return result;
+	}
 	/*
   public JSONArray getGames()
   {
