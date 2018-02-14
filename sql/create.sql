@@ -10,30 +10,34 @@ CREATE TABLE Image (
 );
 
 CREATE TABLE Game (
-	playerIds varchar(100),
-	-- photos
-	papCounter int, -- paparazzi counter
-	playerCount int, -- number of players
+	gameId int,
+	playerIds varchar(200),
 	gameId int,
 	startTime timestamp,
 	-- all chat messages
-	gameRm varchar(20), -- game room name
-	paparazzi int,
+	gameRoomName varchar(20), -- game room name
+	gameDuration int,
+	playerCount int--, -- number of players
+	-- paparazzi int,
+	-- papCounter int, -- paparazzi counter
+	-- host?
+
 	PRIMARY KEY(gameId)
 );
 
 CREATE TABLE Player (
-	userId varchar(20),
+	userId varchar(30),
 	first varchar(20),
 	last varchar(20),
 	PRIMARY KEY(userId)
 );
 
 CREATE TABLE Messages (
-	userId varchar(20),
+	msgId varchar
+	sentFrom varchar(30), -- userid
 	gameId int,
 	sendTime timestamp,
 	message varchar(50),
-	imageId varchar(20)
+	imageId varchar(100)
 	-- key for this could be userId or gameId
 );
