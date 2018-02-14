@@ -168,7 +168,7 @@ class Database {
 				else
 				{
 					onePlayer.put("firstName", "null");
-					onePlayer.put("lastName", "null:);
+					onePlayer.put("lastName", "null");
 					onePlayer.put("facebookUserId", (string)obj);
 				}
 				result.put(onePlayer);
