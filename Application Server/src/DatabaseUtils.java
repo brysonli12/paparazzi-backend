@@ -1,5 +1,7 @@
 import java.sql.*;     // Use classes in java.sql package
 
+import java.util.Calendar;
+import java.util.TimeZone;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject; 
 import org.json.simple.parser.JSONParser;
@@ -30,6 +32,7 @@ class ConnectionManager {
 class Database {
 	private Connection conn = ConnectionManager.getConnection();
 	private Statement stmt;
+	
 	// Will use preparedStatements later after getting a simple version working
 	//private PreparedStatement pstmt = conn.prepareStatement("UPDATE users
 	//                                   SET first = ?, last = ? WHERE ID = ?");
@@ -92,17 +95,29 @@ class Database {
 		JSONObject sentFrom = (JSONObject)  msgInfo.get("sentFrom");
 		String id = (String)sentFrom.get("facebookUserId");
 		String message = (String)msgInfo.get("message");
-		int gameId = (int) req.get("GameId");
-		
+		int gameId = (Integer) req.get("GameId");
+		PreparedStatement storeMsg = null;
 		
 		
 		try {
-			stmt =  conn.createStatement();
 			int time = (int)System.currentTimeMillis();
-			String sqlInsert = "insert into Messages " // need a space
-					+ "values (,\'" + id+ "\'," + gameId + "," + "2004-05-23 14:25:10" + ",\'"+message + "\',)";
+			String sqlInsert = "insert into Messages " // need a space "2004-05-23 14:25:10"
+					+ "values (?,?,?,?,?,?)";
+			storeMsg = conn.prepareStatement(sqlInsert);
+			storeMsg.setNull(1, java.sql.Types.VARCHAR);
+			storeMsg.setString(2, id);
+			storeMsg.setInt(3, gameId);
+			
+			Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+			Timestamp timestamp = new Timestamp(cal.getTimeInMillis());
+			storeMsg.setTimestamp(4, timestamp);
+			
+			// later store message or image depending on available data
+			storeMsg.setString(5, message);
+			storeMsg.setNull(6, java.sql.Types.VARCHAR); // for now...later store image
 			System.out.println("The SQL query is: " + sqlInsert);  // Echo for debugging
-			int countInserted = stmt.executeUpdate(sqlInsert);
+			System.out.println(storeMsg);
+			int countInserted = storeMsg.executeUpdate();
 			System.out.println(countInserted + " records inserted.\n");
 			result.put("timestamp", time);
 			return result;
@@ -110,9 +125,7 @@ class Database {
 			
 			ex.printStackTrace();
 			return null;
-		}
-		//return null;
-		
+		}		
 	}
 
 
@@ -420,6 +433,15 @@ class Database {
 		ab.add("08WK90K00X24GHNR3D90SO");
 		System.out.println("PLAYER INFO\n" + db_utils.getPlayers(ab).toString());
 		System.out.println("GAMES\n" + db_utils._getGames());
+		//{"Message":{"sentFrom":{"firstName":"Bryan","lastName":"Ho","facebookUserId":"10213545242363283"},"message":"hi"},"GameId":89}
+		
+		JSONObject testMsg = new JSONObject();
+		testMsg.put("sentFrom", db_utils.getOnePlayer("10213545242363283"));
+		testMsg.put("message", "hi");
+		JSONObject msg = new JSONObject();
+		msg.put("Message", testMsg);
+		msg.put("GameId", 89);
+		db_utils.storeMessage(msg);
 		//db_utils.insertNewUser("UserID1", "U1_first", "U1_last");
 		//db_utils.updateUser("UserID1", "U1_first", "new_last");
 	}
