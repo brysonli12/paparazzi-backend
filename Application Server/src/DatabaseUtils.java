@@ -100,7 +100,7 @@ class Database {
 		
 		
 		try {
-			int time = (int)System.currentTimeMillis();
+			
 			String sqlInsert = "insert into Messages " // need a space "2004-05-23 14:25:10"
 					+ "values (?,?,?,?,?,?)";
 			storeMsg = conn.prepareStatement(sqlInsert);
@@ -111,6 +111,7 @@ class Database {
 			Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 			Timestamp timestamp = new Timestamp(cal.getTimeInMillis());
 			storeMsg.setTimestamp(4, timestamp);
+			int time = (int)cal.getTimeInMillis();
 			
 			// later store message or image depending on available data
 			storeMsg.setString(5, message);
