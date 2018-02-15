@@ -1,13 +1,16 @@
 import org.json.simple.JSONObject;
 
 public class HelperBuilderClass {
+	//FIX THIS FUNCTION
 	public static int readRequest(JSONObject request) {
-		if(request == null || request.keySet().size() != 1) {
-			return -1;
-		}
+		//if(request == null || request.keySet().size() != 1) {
+		//	return -1;
+		//}
 	
 		switch((String) request.keySet().iterator().next()) {
 			case "Player":
+				return 1;
+			case "Message":
 				return 1;
 			default:
 				return -1;	

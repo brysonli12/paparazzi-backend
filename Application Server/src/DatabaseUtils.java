@@ -42,13 +42,16 @@ class Database {
 
 	public JSONObject handleRequest(JSONObject obj, int requestType)
 	{
+		JSONObject t = new JSONObject();
 		switch(requestType)
 		{
 		case 1:
 			return login(obj);
 		case 2:
-			JSONObject t = new JSONObject();
 			t.put("games",getGames(obj));
+			return t;
+		case 3:
+			t.put("timeStamp", storeMessage(obj));
 			return t;
 		}
 		return null;
@@ -74,6 +77,43 @@ class Database {
 		}
 		return jsonArray;
 	}*/
+
+
+	public JSONObject storeMessage(JSONObject req)
+	{
+		System.out.println("STORE MSG: " + req);
+		
+		/*
+		 * {"Message":{"sentFrom":{"firstName":"Bryan","lastName":"Ho","facebookUserId":"10213545242363283"},"message":"hi"},"GameId":89}
+		 */
+		
+		JSONObject result = new JSONObject();
+		JSONObject msgInfo = (JSONObject) req.get("Message");
+		JSONObject sentFrom = (JSONObject)  msgInfo.get("sentFrom");
+		String id = (String)sentFrom.get("facebookUserId");
+		String message = (String)msgInfo.get("message");
+		int gameId = (int) req.get("GameId");
+		
+		
+		
+		try {
+			stmt =  conn.createStatement();
+			int time = (int)System.currentTimeMillis();
+			String sqlInsert = "insert into Messages " // need a space
+					+ "values (,\'" + id+ "\'," + gameId + "," + "2004-05-23 14:25:10" + ",\'"+message + "\',)";
+			System.out.println("The SQL query is: " + sqlInsert);  // Echo for debugging
+			int countInserted = stmt.executeUpdate(sqlInsert);
+			System.out.println(countInserted + " records inserted.\n");
+			result.put("timestamp", time);
+			return result;
+		} catch (SQLException ex) {
+			
+			ex.printStackTrace();
+			return null;
+		}
+		//return null;
+		
+	}
 
 
 	public boolean doesUserExist(String uId)
