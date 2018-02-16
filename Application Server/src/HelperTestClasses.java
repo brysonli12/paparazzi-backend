@@ -7,20 +7,20 @@ public class HelperTestClasses {
 	//Server related variables
 	public static final String ipAddress = "127.0.0.1";
 	public static final int port = 8000;
-	public static final String context[] = {"/login","/getgames"};
+	public static final String context[] = {"/login","/getgames","/sendmessage"};
 	
 	//JSON Response related variables
 	private static final String letterList = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	private static final String numberList = "0123456789";
 	private static final String playerStatus[] = {"returningPlayer","newPlayer","failed"};
-	private static final int maxUserId = 31;
-	private static final int maxFirstName = 21;
-	private static final int maxLastName = 21;
-	private static final int maxGameName = 26;
-	private static final int maxPlayerCount = 6;
-	private static final int maxMessages = 11;
+	private static final int maxUserId = 20;//31
+	private static final int maxFirstName = 11;
+	private static final int maxLastName = 11;
+	private static final int maxGameName = 11;//26
+	private static final int maxPlayerCount = 3;//6;
+	private static final int maxMessages = 16;
 	private static final int maxChatSize = 31;
-	private static final int maxImageSize = 51;
+	private static final int maxImageSize = 10;//51;
 	private static final int maxSleepSeconds = 5;
 	private static final int maxDurationDays = 11;
 	private static final int maxGames = 3;
@@ -44,12 +44,12 @@ public class HelperTestClasses {
 			}
 		}
 
-		randomValue = rand.nextInt(maxFirstName);
+		randomValue = rand.nextInt(maxFirstName) + 1;
 		for(int i = 0; i < randomValue; i++) {
 			firstName += letterList.charAt(rand.nextInt(26));
 		}
 
-		randomValue = rand.nextInt(maxLastName);
+		randomValue = rand.nextInt(maxLastName) + 1;
 		for(int i = 0; i < randomValue; i++) {
 			lastName += letterList.charAt(rand.nextInt(26));
 		}
@@ -71,7 +71,7 @@ public class HelperTestClasses {
 
 		String gameRoomName = "";
 
-		randomValue = rand.nextInt(maxGameName);
+		randomValue = rand.nextInt(maxGameName) + 1;
 		for(int i = 0; i < randomValue; i++) {
 			gameRoomName += letterList.charAt(rand.nextInt(26));
 		}
@@ -90,7 +90,7 @@ public class HelperTestClasses {
 		int randomValue;
 		Random rand = new Random();
 		
-		randomValue = rand.nextInt(maxMessages);
+		randomValue = rand.nextInt(maxMessages) + 1;
 		for(int i = 0; i < randomValue; i++) {
 			JSONObject messageData = new JSONObject();
 			JSONObject player = HelperTestClasses.randomPlayerClass();
@@ -99,19 +99,19 @@ public class HelperTestClasses {
 			String image = "";
 			int randomValue2;
 
-			randomValue2 = rand.nextInt(maxChatSize);
+			randomValue2 = rand.nextInt(maxChatSize) + 1;
 			for(int j = 0; j < randomValue; j++) {
 				chatMessage += letterList.charAt(rand.nextInt(26));
 			}
 
-			randomValue2 = rand.nextInt(maxImageSize);
-			for(int j= 0; j < randomValue; j++) {
-				image += letterList.charAt(rand.nextInt(26));
-			}
+			//randomValue2 = rand.nextInt(maxImageSize);
+			//for(int j= 0; j < randomValue; j++) {
+			//	image += letterList.charAt(rand.nextInt(26));
+			//}
 
 			messageData.put("sentFrom", player);
 			messageData.put("message", chatMessage);
-			messageData.put("image", image);
+			//messageData.put("image", image);
 
 			messageList.add(messageData);
 		}
@@ -145,13 +145,13 @@ public class HelperTestClasses {
 		Random rand = new Random();
 		int randomValue;
 
-		randomValue = rand.nextInt(maxGames);
+		randomValue = rand.nextInt(maxGames) + 1;
 		for(int i = 0; i < randomValue; i++) {
 			JSONObject gamesData = new JSONObject();
 			//JSONObject players = new JSONObject();
 			JSONArray playersList = new JSONArray();
 
-			int randomValue2 = rand.nextInt(maxPlayerCount);			
+			int randomValue2 = rand.nextInt(maxPlayerCount) + 1;			
 			for(int j = 0; j < randomValue2; j++) {
 				playersList.add(HelperTestClasses.randomPlayerClass());
 			}

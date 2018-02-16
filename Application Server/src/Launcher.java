@@ -10,6 +10,7 @@ public class Launcher {
 		HttpServer server = HttpServer.create(new InetSocketAddress(HelperTestClasses.port),0);
 		server.createContext(HelperTestClasses.context[0], new LoginHandler());
 		server.createContext(HelperTestClasses.context[1], new RetrieveGameHandler());
+		server.createContext(HelperTestClasses.context[2], new SendMessageHandler());
 		server.setExecutor(null);
 		server.start();
 		
