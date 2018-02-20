@@ -92,10 +92,11 @@ class Database {
 		
 		JSONObject result = new JSONObject();
 		JSONObject msgInfo = (JSONObject) req.get("Message");
-		JSONObject sentFrom = (JSONObject)  msgInfo.get("sentFrom");
+		JSONObject sentFrom = (JSONObject)  req.get("sentFrom");//msgInfo.get("sentFrom");
 		String id = (String)sentFrom.get("facebookUserId");
-		String message = (String)msgInfo.get("message");
-		int gameId = (Integer) req.get("GameId");
+		String message = (String) req.get("message");//msgInfo.get("message");
+		System.out.println("GAME ID" + req.get("GameID").getClass().getName());
+		long gameId = (Long)req.get("GameID"); //req.get("GameId");
 		PreparedStatement storeMsg = null;
 		
 		
@@ -106,12 +107,12 @@ class Database {
 			storeMsg = conn.prepareStatement(sqlInsert);
 			storeMsg.setNull(1, java.sql.Types.VARCHAR);
 			storeMsg.setString(2, id);
-			storeMsg.setInt(3, gameId);
+			storeMsg.setLong(3, gameId);
 			
 			Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 			Timestamp timestamp = new Timestamp(cal.getTimeInMillis());
 			storeMsg.setTimestamp(4, timestamp);
-			int time = (int)cal.getTimeInMillis();
+			long time = cal.getTimeInMillis();
 			
 			// later store message or image depending on available data
 			storeMsg.setString(5, message);

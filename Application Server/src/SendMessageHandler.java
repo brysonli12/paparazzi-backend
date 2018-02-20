@@ -37,9 +37,9 @@ public class SendMessageHandler implements HttpHandler{
 				if(requestType == -1) {
 					data = null;
 				}else {
-					//Database x = new Database();
-					//data = x.handleRequest(request, 3);
-					data = new JSONObject();
+					Database x = new Database();
+					data = x.handleRequest(request, 3);
+					//data = new JSONObject();
 				}
 				
 			}catch(ParseException e) {
