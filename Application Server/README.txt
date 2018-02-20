@@ -30,3 +30,7 @@ Changed related functions JSONObject response to communicate with frontend
 
 Added:
 retrieve game handler to separate login/ get games. 
+
+2/19/2018
+Refactor code to clean up clutter
+Added cases for the ClientTester(Player case and send message case).
