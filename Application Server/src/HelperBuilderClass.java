@@ -9,9 +9,9 @@ public class HelperBuilderClass {
 	
 		switch((String) request.keySet().iterator().next()) {
 			case "Player":
-				return 1;
+				return 0;
 			case "Message":
-				return 1;
+				return 0;
 			default:
 				return -1;	
 		}

@@ -31,13 +31,13 @@ public class RetrieveGameHandler implements HttpHandler{
 				requestType = HelperBuilderClass.readRequest(request);
 				System.out.println("RECEIVED GETGAMES: " + request.toString());
 				//Handle request by sending to JDBC
-				//Ex: data = handleRequest(requestType);
-				//below is a hard coded to handle login response
+				//Ex: data = handleRequest(requestType,code);
+				
 				if(requestType == -1) {
 					data = null;
 				}else {
 					Database x = new Database();
-					data = x.handleRequest(request, 2);//HelperTestClasses.randomLoginResponseClass(request);
+					data = x.handleRequest(request, 2);
 				}
 				
 			}catch(ParseException e) {

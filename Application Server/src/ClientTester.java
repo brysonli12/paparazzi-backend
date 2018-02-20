@@ -4,10 +4,13 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Random;
 
 import org.json.simple.JSONObject;
 
 public class ClientTester {
+	private static final int cases = 1;
+	
 	public static void main(String[] args){
 		launchTest();
 	}
@@ -23,17 +26,26 @@ public class ClientTester {
 
 			connect.setDoOutput(true);
 			
-			JSONObject playerJSON = new JSONObject();
-			playerJSON.put("Player", HelperTestClasses.randomPlayerClass());
-			Thread.sleep(1000 * HelperTestClasses.randomSleep());
+			JSONObject send = new JSONObject();
 			
+			switch(cases) {
+				case 1:
+					send.put("Player", HelperTestClasses.randomPlayerClass());
+				case 3:
+					send = HelperTestClasses.randomClientMessage();
+					send.put("GameID", new Random().nextInt(1001));
+				default:
+					send.put("Player", HelperTestClasses.randomPlayerClass());
+			}
+			
+			Thread.sleep(1000 * HelperTestClasses.randomSleep());
 			OutputStreamWriter os = new OutputStreamWriter(connect.getOutputStream());
-			os.write(playerJSON.toString());
+			os.write(send.toString());
 			os.flush();
 			
 			int responseCode = connect.getResponseCode();
 			System.out.println("Sending 'POST' request to URL : " + url);
-			System.out.println("Sent: " + playerJSON.toString());
+			System.out.println("Sent: " + send.toString());
 			System.out.println("Response Code : " + responseCode);
 
 			BufferedReader in;
