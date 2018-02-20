@@ -29,7 +29,7 @@ public class LoginHandler implements HttpHandler{
 			try {
 				request = (JSONObject) parse.parse(requestBodyText);
 				requestType = HelperBuilderClass.readRequest(request);
-				System.out.println("RECEIVED: " + request.toString());
+				System.out.println("RECEIVEDLOGIN: " + request.toString());
 				//Handle request by sending to JDBC
 				//Ex: data = handleRequest(requestType,code);
 				
