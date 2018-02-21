@@ -11,6 +11,8 @@ public class Launcher {
 		server.createContext(HelperTestClasses.context[0], new LoginHandler());
 		server.createContext(HelperTestClasses.context[1], new RetrieveGameHandler());
 		server.createContext(HelperTestClasses.context[2], new SendMessageHandler());
+		server.createContext(HelperTestClasses.context[3], new CreateGameHandler());
+		server.createContext(HelperTestClasses.context[4], new GetMessagesHandler());
 		server.setExecutor(null);
 		server.start();
 		

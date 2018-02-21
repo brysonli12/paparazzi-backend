@@ -10,13 +10,13 @@ CREATE TABLE Image (
 );
 
 CREATE TABLE Game (
-	gameId int,
+	gameId varchar(20),
 	playerIds varchar(200),
 	startTime datetime,
 	allMessages varchar(500),
 	gameRoomName varchar(20), -- game room name
-	gameDuration int,
-	playerCount int, -- number of players
+	gameDuration varchar(20),
+	playerCount varchar(20), -- number of players
 	-- paparazzi int,
 	-- papCounter int, -- paparazzi counter
 	-- host?
@@ -36,7 +36,7 @@ CREATE TABLE Player (
 CREATE TABLE Messages (
 	msgId varchar(30),
 	sentFrom varchar(30), -- userid
-	gameId int,
+	gameId varchar(20),
 	sendTime datetime,
 	message varchar(50),
 	image varchar(100)

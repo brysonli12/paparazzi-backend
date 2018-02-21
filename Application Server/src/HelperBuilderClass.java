@@ -9,7 +9,7 @@ public class HelperBuilderClass {
 			return -1;
 		}
 		
-		if(request.containsKey("Player") || request.containsKey("message")) {
+		if(request.containsKey("Player") || request.containsKey("Message")) {
 			return 0;
 		}
 		return -1;

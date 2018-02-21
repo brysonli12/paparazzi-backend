@@ -1,4 +1,3 @@
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,7 +10,7 @@ import org.json.simple.parser.ParseException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-public class SendMessageHandler implements HttpHandler{
+public class GetMessagesHandler implements HttpHandler{
 	public void handle(HttpExchange t) {
 		try {		
 			BufferedReader in = new BufferedReader(new InputStreamReader(t.getRequestBody()));
@@ -29,18 +28,19 @@ public class SendMessageHandler implements HttpHandler{
 			
 			try {
 				request = (JSONObject) parse.parse(requestBodyText);
-				requestType = HelperBuilderClass.readRequest(request);
-				System.out.println("RECEIVED: " + request.toString() + " Request type: " + requestType);
+				//requestType = HelperBuilderClass.readRequest(request);
+				System.out.println("RECEIVED GETMESSAGES: " + request.toString());
 				//Handle request by sending to JDBC
 				//Ex: data = handleRequest(requestType,code);
 				
-				if(requestType == -1) {
-					data = null;
-				}else {
+				//if(requestType == -1) {
+				//	data = null;
+				//}else {
 					Database x = new Database();
-					data = x.handleRequest(request, 3);
+					data = x.handleRequest(request, 5);
+					requestType = 0;
 					//data = new JSONObject();
-				}
+				//}
 				
 			}catch(ParseException e) {
 				data = null;
@@ -75,4 +75,3 @@ public class SendMessageHandler implements HttpHandler{
 		}
 	}
 }
-

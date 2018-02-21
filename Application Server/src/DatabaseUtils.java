@@ -32,12 +32,13 @@ class ConnectionManager {
 class Database {
 	private Connection conn = ConnectionManager.getConnection();
 	private Statement stmt;
-	
+
 	// Will use preparedStatements later after getting a simple version working
 	//private PreparedStatement pstmt = conn.prepareStatement("UPDATE users
 	//                                   SET first = ?, last = ? WHERE ID = ?");
 	private static final String DB_NAME = "ebookshop";
-
+	private static long msg_Id = 1L;
+	
 	public Database()
 	{
 
@@ -51,86 +52,216 @@ class Database {
 		case 1:
 			return login(obj);
 		case 2:
-			t.put("games",getGames(obj));
+			JSONArray games = _getGames(obj);
+			if (games.isEmpty())
+			{
+				t.put("games", null);
+			}
+			else
+			{
+				t.put("games", games);
+			}
 			return t;
 		case 3:
-			t.put("timeStamp", storeMessage(obj));
+			return storeMessage(obj);
+		case 4:
+			return createGame(obj);
+		case 5:
+			t.put("messages", joinGame(obj)); // invite code and playerids
+			// p
 			return t;
 		}
 		return null;
 
 	}
-	/**
-	 * Convert a result set into a JSON Array
-	 * @param resultSet
-	 * @return a JSONArray
-	 * @throws Exception
-	 * @author marlonlom (link in References file)
-	 */
-	/*public JSONArray convertToJSON(ResultSet resultSet)
-			throws Exception {
-		JSONArray jsonArray = new JSONArray();
-		while (resultSet.next()) {
-			int total_rows = resultSet.getMetaData().getColumnCount();
-			for (int i = 0; i < total_rows; i++) {
-				JSONObject obj = new JSONObject();
-				obj.put(resultSet.getMetaData().getColumnLabel(i + 1).toLowerCase(), resultSet.getObject(i + 1));
-				jsonArray.put(obj);
+
+	// JSONArray wrapped in JSONObject --> unwrapped
+	public JSONArray joinGame(JSONObject req)
+	{
+		/*
+		try
+		{
+			stmt =  conn.createStatement();
+			ResultSet games = stmt.executeQuery("select * from Game where gameId='" + (String)req.get("gameId") + "'");
+			if (games.next()) {
+				System.out.println("Getting messages for the game " + (String)req.get("gameId"));
+				String msgIds =  (String)games.getString("allMessages");
+
+				// possible try/catch block here to catch parsing/ formatting errors
+				JSONParser parser = new JSONParser();
+				JSONObject tmp = new JSONObject();
+				try {
+					tmp = (JSONObject)parser.parse("{\"array\": " + msgIds + "}" );
+				} catch (ParseException e) {
+					System.out.println("Messages. Parse error");
+					e.printStackTrace();
+					return null;
+				}
+				JSONArray mIds = (JSONArray) (tmp.get("array"));
+				// possibly update game duration, etc.
+				JSONArray get__Msg =  _getMessages(mIds);
+				System.out.println("DB: sending get_msg " + get__Msg.toJSONString());
+				return get__Msg;
 			}
+		} catch(SQLException ex) {
+			// return something else if exception
+			ex.printStackTrace();
+			return null;
 		}
-		return jsonArray;
-	}*/
+		return null;
+		*/
+		return null;
+	}
+	// store gameInfo into table, make sure game room name hasn't been used
+	public JSONObject createGame(JSONObject req)
+	{
+		System.out.println("CREATE GAME MSG: " + req);
 
 
+		JSONObject result = new JSONObject();
+		JSONObject game = (JSONObject)req.get("game");
+		JSONObject gameInfo = (JSONObject) game.get("gameInfo");
+		String gameRmName = (String)  gameInfo.get("gameRoomName");
+		String gameDur = Long.toString((Long)gameInfo.get("gameDuration"));
+		String maxPlayerCount = Long.toString((Long)gameInfo.get("playerCount"));
+		JSONArray plays =  (JSONArray)game.get("player");
+		String plays_for_db = playerToIdList(plays).toJSONString();
+		
+		PreparedStatement storeMsg = null;
+		if (doesGameExist(gameRmName))
+		{
+			return null;
+		}
+
+		try {
+			
+			String sqlInsert = "insert into Game " 
+					+ "values (?,?,?,?,?,?,?)";
+			storeMsg = conn.prepareStatement(sqlInsert);
+			//storeMsg.setNull(1, java.sql.Types.VARCHAR);
+			//storeMsg.setString(2, id);
+			//storeMsg.setLong(3, gameId);
+
+			Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+			long time = cal.getTimeInMillis();
+			storeMsg.setLong(1, time);
+			storeMsg.setString(2, plays_for_db);
+			
+			Timestamp timestamp = new Timestamp(time);
+			storeMsg.setTimestamp(3, timestamp);
+			
+			storeMsg.setString(4, "[]");
+			storeMsg.setString(5, gameRmName);
+			storeMsg.setString(6, gameDur);
+			storeMsg.setString(7, maxPlayerCount);
+
+			// later store message or image depending on available data
+			//storeMsg.setString(5, message);
+			System.out.println("The SQL query is: " + sqlInsert);  // Echo for debugging
+			System.out.println(storeMsg);
+			int countInserted = storeMsg.executeUpdate();
+			System.out.println(countInserted + " records inserted into Game.\n");
+			return result;
+		} catch (SQLException ex) {
+
+			ex.printStackTrace();
+			return null;
+		}
+	}
+	
 	public JSONObject storeMessage(JSONObject req)
 	{
 		System.out.println("STORE MSG: " + req);
-		
+		//
 		/*
 		 * {"Message":{"sentFrom":{"firstName":"Bryan","lastName":"Ho","facebookUserId":"10213545242363283"},"message":"hi"},"GameId":89}
 		 */
 		
 		JSONObject result = new JSONObject();
 		JSONObject msgInfo = (JSONObject) req.get("Message");
-		JSONObject sentFrom = (JSONObject)  req.get("sentFrom");//msgInfo.get("sentFrom");
+		JSONObject sentFrom = (JSONObject)  msgInfo.get("sentFrom");
 		String id = (String)sentFrom.get("facebookUserId");
-		String message = (String) req.get("message");//msgInfo.get("message");
-		System.out.println("GAME ID" + req.get("GameID").getClass().getName());
-		long gameId = (Long)req.get("GameID"); //req.get("GameId");
+		String message = (String) msgInfo.get("message");
+		//System.out.println("GAME ID" + req.get("GameID").getClass().getName());
+		System.out.println("before get game id");
+		String gameId = Long.toString((Long)req.get("GameId"));
 		PreparedStatement storeMsg = null;
-		
-		
+
+
 		try {
-			
+
 			String sqlInsert = "insert into Messages " // need a space "2004-05-23 14:25:10"
 					+ "values (?,?,?,?,?,?)";
 			storeMsg = conn.prepareStatement(sqlInsert);
-			storeMsg.setNull(1, java.sql.Types.VARCHAR);
-			storeMsg.setString(2, id);
-			storeMsg.setLong(3, gameId);
 			
+
 			Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 			Timestamp timestamp = new Timestamp(cal.getTimeInMillis());
-			storeMsg.setTimestamp(4, timestamp);
 			long time = cal.getTimeInMillis();
 			
+			storeMsg.setString(1, time + "-" +Long.toString(msg_Id));
+			storeMsg.setString(2, id);
+			storeMsg.setString(3, gameId);
+			storeMsg.setTimestamp(4, timestamp);
+			
+
 			// later store message or image depending on available data
 			storeMsg.setString(5, message);
 			storeMsg.setNull(6, java.sql.Types.VARCHAR); // for now...later store image
 			System.out.println("The SQL query is: " + sqlInsert);  // Echo for debugging
 			System.out.println(storeMsg);
 			int countInserted = storeMsg.executeUpdate();
-			System.out.println(countInserted + " records inserted.\n");
+			System.out.println(countInserted + " records inserted into Message table.\n");
 			result.put("timestamp", time);
+			
+			addMessageToGame(gameId, time + "-" +Long.toString(msg_Id));
+			
+			
 			return result;
 		} catch (SQLException ex) {
-			
+
 			ex.printStackTrace();
 			return null;
 		}		
 	}
 
-	public int addPlayerToGame(int gameId, JSONObject player)
+	public int addMessageToGame(String gameId, String msgId)
+	{
+		try
+		{
+			stmt =  conn.createStatement();
+			ResultSet games = stmt.executeQuery("select * from Game where gameId=" + gameId);
+			if (games.next()) {	
+				String msgIds =  games.getString("allMessages");
+
+				// possible try/catch block here to catch parsing/ formatting errors
+				JSONParser parser = new JSONParser();
+				JSONObject tmp = new JSONObject();
+				try {
+					tmp = (JSONObject)parser.parse("{\"array\": " + msgIds + "}" );
+				} catch (ParseException e) {
+					System.out.println("Messages. Parse error");
+					e.printStackTrace();
+					return -1;
+				}
+				JSONArray mIds = (JSONArray) (tmp.get("array"));
+				mIds.add(msgId);
+				String newMsg = mIds.toJSONString();
+				// possibly update game duration, etc.
+				String updateIds = "UPDATE Game SET allMessages='" + newMsg + "' WHERE gameId="+gameId;
+				System.out.println("UPDATING player messages: " + updateIds);
+				int countUpdated = stmt.executeUpdate(updateIds);
+				return countUpdated;
+			}
+		} catch(SQLException ex) {
+			// return something else if exception
+			ex.printStackTrace();
+			return -1;
+		}
+		return -1;
+	}
+	
+	public int addPlayerToGame(String gameId, JSONObject player)
 	{
 		try
 		{
@@ -138,7 +269,7 @@ class Database {
 			ResultSet games = stmt.executeQuery("select * from Game where gameId=" + gameId);
 			if (games.next()) {	
 				String playIds =  games.getString("playerIds");
-				int numPlayer =  games.getInt("playerCount");
+				long numPlayer =  Long.parseLong(games.getString("playerCount"));
 
 				// possible try/catch block here to catch parsing/ formatting errors
 				JSONParser parser = new JSONParser();
@@ -166,6 +297,23 @@ class Database {
 			return -1;
 		}
 		return -1;
+	}
+
+	public boolean doesGameExist(String gameName)
+	{
+		try
+		{
+			stmt =  conn.createStatement();
+			ResultSet gameExists = stmt.executeQuery("select * from Game where gameRoomName = '" + gameName + "'");
+			if (!gameExists.next()) // if not found
+			{
+				return false;
+			}
+			return true;
+		} catch(SQLException ex) {
+			ex.printStackTrace();
+			return true;
+		}
 	}
 
 	public boolean doesUserExist(String uId)
@@ -213,6 +361,7 @@ class Database {
 			}
 			else
 			{
+				System.out.println("insert new player");
 				insertNewUser(uId, first, last);
 				result.put("loginStatus", "newPlayer");
 				games.put("games", "null");
@@ -250,7 +399,7 @@ class Database {
 			for (Object obj: playObjs)
 			{
 				JSONObject aPlayer = (JSONObject)obj;
-				result.add((String) aPlayer.get("userId"));
+				result.add((String) aPlayer.get("facebookUserId"));
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -258,7 +407,7 @@ class Database {
 		return result;
 	}
 
-	
+
 	/**
 	 * Return a JSONArray of players (JSONObjects)
 	 *
@@ -382,19 +531,23 @@ class Database {
 		return result;
 	}
 
-	private JSONArray _getGames()
+	private JSONArray _getGames(JSONObject req)
 	{
 		JSONArray allGames = new JSONArray();
+		JSONObject player = (JSONObject)req.get("Player");
+		String fbID = (String)player.get("facebookUserId");
+		System.out.println("Fetching games for " + fbID);
 		try
 		{
 			stmt =  conn.createStatement();
-			ResultSet games = stmt.executeQuery("select * from Game");
+			ResultSet games = stmt.executeQuery("select * from Game where playerIds LIKE \'%" + fbID + "%\'");
 			while (games.next()) {	
+				System.out.println("Fetch a game for playerid");
 				JSONObject oneGame = new JSONObject();
 				JSONObject gameInf = new JSONObject();
 				gameInf.put("gameRoomName", games.getString("gameRoomName"));
-				gameInf.put("gameDuration", games.getInt("gameDuration")); // getInt?
-				gameInf.put("playerCount", games.getInt("playerCount")); // getInt?
+				gameInf.put("gameDuration", Long.parseLong(games.getString("gameDuration"))); 
+				gameInf.put("playerCount", Long.parseLong(games.getString("playerCount"))); 
 
 				String playIds =  games.getString("playerIds");
 
@@ -409,14 +562,15 @@ class Database {
 				}
 				JSONArray pIds = (JSONArray) (tmp.get("array"));
 				JSONArray playersInGame = getPlayers(pIds);
-				//JSONArray userGames = convertToJSON(games);
+
+				System.out.println("players in game " + playersInGame.toJSONString());
 				oneGame.put("gameInfo", gameInf);
 				oneGame.put("players", playersInGame);
-				oneGame.put("gameId", games.getInt("gameId"));
+				oneGame.put("gameId", Long.parseLong(games.getString("gameId")));
 
 				String msgIds =  games.getString("allMessages");
 				System.out.println("message ids" + msgIds);
-				
+
 				// get all messages here
 				try {
 					tmp = (JSONObject)parser.parse("{\"array\": " + msgIds + "}" );
@@ -496,9 +650,9 @@ class Database {
 		ab.add("10213545242363283");
 		ab.add("08WK90K00X24GHNR3D90SO");
 		System.out.println("PLAYER INFO\n" + db_utils.getPlayers(ab).toString());
-		System.out.println("GAMES\n" + db_utils._getGames());
+		//System.out.println("GAMES\n" + db_utils._getGames());
 		//{"Message":{"sentFrom":{"firstName":"Bryan","lastName":"Ho","facebookUserId":"10213545242363283"},"message":"hi"},"GameId":89}
-		
+
 		JSONObject testMsg = new JSONObject();
 		testMsg.put("sentFrom", db_utils.getOnePlayer("10213545242363283"));
 		testMsg.put("message", "hi");

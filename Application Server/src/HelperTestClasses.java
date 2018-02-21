@@ -7,7 +7,7 @@ public class HelperTestClasses {
 	//Server related variables
 	public static final String ipAddress = "127.0.0.1";
 	public static final int port = 8000;
-	public static final String context[] = {"/login","/getgames","/sendmessage"};
+	public static final String context[] = {"/login","/getgames","/sendmessage","/creategame","/getmessages"};
 	
 	//JSON Response related variables
 	private static final String letterList = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -42,7 +42,9 @@ public class HelperTestClasses {
 	
 	private static final int gamesLowerBound = 1;
 	private static final int maxGames = 3;
-
+	
+	private static final int gameId = 3;
+	
 	public static JSONObject randomPlayerClass() {
 		JSONObject player = new JSONObject();
 		int randomValue;
@@ -190,7 +192,8 @@ public class HelperTestClasses {
 				playersList.add(HelperTestClasses.randomPlayerClass());
 			}
 
-			gamesData.put("gameId", rand.nextInt(1001));
+			
+			gamesData.put("gameId", rand.nextInt(gameId));
 			gamesData.put("gameInfo", HelperTestClasses.randomGameInfoClass(randomValue2));
 			gamesData.put("players", playersList);
 			gamesData.put("messages", HelperTestClasses.randomMessageClass());
