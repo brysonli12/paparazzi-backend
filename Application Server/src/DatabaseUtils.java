@@ -130,6 +130,43 @@ class Database {
 		}		
 	}
 
+	public int addPlayerToGame(int gameId, JSONObject player)
+	{
+		try
+		{
+			stmt =  conn.createStatement();
+			ResultSet games = stmt.executeQuery("select * from Game where gameId=" + gameId);
+			if (games.next()) {	
+				String playIds =  games.getString("playerIds");
+				int numPlayer =  games.getInt("playerCount");
+
+				// possible try/catch block here to catch parsing/ formatting errors
+				JSONParser parser = new JSONParser();
+				JSONObject tmp = new JSONObject();
+				try {
+					tmp = (JSONObject)parser.parse("{\"array\": " + playIds + "}" );
+				} catch (ParseException e) {
+					System.out.println("Players. Parse error");
+					e.printStackTrace();
+					return -1;
+				}
+				JSONArray pIds = (JSONArray) (tmp.get("array"));
+				pIds.add(player.get("userId"));
+				numPlayer++;
+				String newPlay = pIds.toJSONString();
+				// possibly update game duration, etc.
+				String updateIds = "UPDATE Game SET playerIds=\'" + newPlay + "\', playerCount=" + numPlayer + " WHERE gameId="+gameId;
+				System.out.println("UPDATING player ids: " + updateIds);
+				int countUpdated = stmt.executeUpdate(updateIds);
+				return countUpdated;
+			}
+		} catch(SQLException ex) {
+			// return something else if exception
+			ex.printStackTrace();
+			return -1;
+		}
+		return -1;
+	}
 
 	public boolean doesUserExist(String uId)
 	{
@@ -197,6 +234,31 @@ class Database {
 		return HelperTestClasses.randomGamesClass();	  
 	}
 
+	/**
+	 * Return a JSONArray of players (JSONObjects)
+	 *
+	 * @param playObjs JSONArray list of player Ids
+	 * @return      the JSONArrays of Player JSONObjects in a specified format
+	 */
+	@SuppressWarnings("unchecked")
+	private JSONArray playerToIdList(JSONArray playObjs)
+	{
+		JSONArray result = new JSONArray();
+		try
+		{
+			stmt =  conn.createStatement();
+			for (Object obj: playObjs)
+			{
+				JSONObject aPlayer = (JSONObject)obj;
+				result.add((String) aPlayer.get("userId"));
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return result;
+	}
+
+	
 	/**
 	 * Return a JSONArray of players (JSONObjects)
 	 *
