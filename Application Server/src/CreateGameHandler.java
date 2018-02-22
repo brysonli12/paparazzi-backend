@@ -10,7 +10,7 @@ import org.json.simple.parser.ParseException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-public class RetrieveGameHandler implements HttpHandler{
+public class CreateGameHandler implements HttpHandler {
 	public void handle(HttpExchange t) {
 		try {		
 			BufferedReader in = new BufferedReader(new InputStreamReader(t.getRequestBody()));
@@ -28,17 +28,19 @@ public class RetrieveGameHandler implements HttpHandler{
 			
 			try {
 				request = (JSONObject) parse.parse(requestBodyText);
-				requestType = HelperBuilderClass.readRequest(request);
-				/////System.out.println("RECEIVED GETGAMES: " + request.toString());
+				//requestType = HelperBuilderClass.readRequest(request);
+				System.out.println("RECEIVED CREATEGAME: " + request.toString());
 				//Handle request by sending to JDBC
 				//Ex: data = handleRequest(requestType,code);
 				
-				if(requestType == -1) {
-					data = null;
-				}else {
+				//if(requestType == -1) {
+				//	data = null;
+				//}else {
 					Database x = new Database();
-					data = x.handleRequest(request, 2);
-				}
+					data = x.handleRequest(request, 4);
+					requestType = 0;
+					//data = new JSONObject();
+				//}
 				
 			}catch(ParseException e) {
 				data = null;
@@ -47,12 +49,16 @@ public class RetrieveGameHandler implements HttpHandler{
 			}
 			
 			//Send back JSONObject or a push notification
-			JSONObject response = HelperBuilderClass.buildResponse(2, data);
-			byte[] responseBytes = response.toString().getBytes();
+			JSONObject response = new JSONObject();
+			byte[] responseBytes;
 			
 			if(requestType == -1 || data == null) {
-				t.sendResponseHeaders(400, responseBytes.length);
+				response.put("messagestatus","Game room name already taken.");
+				responseBytes = response.toString().getBytes();
+				t.sendResponseHeaders(200, responseBytes.length);
 			}else {
+				response.put("messagestatus", "success");
+				responseBytes = response.toString().getBytes();
 				t.sendResponseHeaders(200, responseBytes.length);
 			}
 			
@@ -60,7 +66,7 @@ public class RetrieveGameHandler implements HttpHandler{
 			os.write(responseBytes);
 			os.flush();
 			
-			/////System.out.println("Sending Response: " + response.toString() + "\n");
+			System.out.println("Sending Response: " + response.toString() + "\n");
 
 			in.close();
 			os.close();
@@ -68,5 +74,4 @@ public class RetrieveGameHandler implements HttpHandler{
 			e.printStackTrace();		
 		}
 	}
-
 }

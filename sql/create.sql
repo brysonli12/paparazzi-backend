@@ -10,30 +10,36 @@ CREATE TABLE Image (
 );
 
 CREATE TABLE Game (
-	playerIds varchar(100),
-	-- photos
-	papCounter int, -- paparazzi counter
-	playerCount int, -- number of players
-	gameId int,
-	startTime timestamp,
-	-- all chat messages
-	gameRm varchar(20), -- game room name
-	paparazzi int,
+	gameId varchar(20),
+	playerIds varchar(200),
+	startTime datetime,
+	allMessages varchar(500),
+	gameRoomName varchar(20), -- game room name
+	gameDuration varchar(20),
+	playerCount varchar(20), -- number of players
+	-- started OR automatically
+	-- paparazzi int,
+	-- papCounter int, -- paparazzi counter
+	-- host?
+
 	PRIMARY KEY(gameId)
 );
+-- insert into game values(35, '["10213545242363283","08WK90K00X24GHNR3D90SO"]', '2004-05-23T14:25:10', '["abc"]', "gameRoom1", 3000, 2);
+
 
 CREATE TABLE Player (
-	userId varchar(20),
+	userId varchar(30),
 	first varchar(20),
 	last varchar(20),
 	PRIMARY KEY(userId)
 );
 
 CREATE TABLE Messages (
-	userId varchar(20),
-	gameId int,
-	sendTime timestamp,
+	msgId varchar(30),
+	sentFrom varchar(30), -- userid
+	gameId varchar(20),
+	sendTime datetime,
 	message varchar(50),
-	imageId varchar(20)
+	image varchar(100)
 	-- key for this could be userId or gameId
 );
