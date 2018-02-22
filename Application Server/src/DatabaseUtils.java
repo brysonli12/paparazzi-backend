@@ -66,51 +66,43 @@ class Database {
 			return storeMessage(obj);
 		case 4:
 			return createGame(obj);
-		case 5:
-			t.put("messages", joinGame(obj)); // invite code and playerids
-			// p
-			return t;
+		case 6:
+			return joinGame(obj); // invite code and playerids
 		}
 		return null;
 
 	}
 
 	// JSONArray wrapped in JSONObject --> unwrapped
-	public JSONArray joinGame(JSONObject req)
+	public JSONObject joinGame(JSONObject req)
 	{
-		/*
-		try
+		JSONObject status = new JSONObject();
+		JSONObject play = (JSONObject)req.get("player");
+		String playId = (String)play.get("facebookUserId");
+		String gameName = (String)req.get("gameRoomName");
+		// can't join --> null, otherwise json object		return null;
+		int result = addPlayerToGame(gameName, playId);
+		if (result == -1) // sql error
 		{
-			stmt =  conn.createStatement();
-			ResultSet games = stmt.executeQuery("select * from Game where gameId='" + (String)req.get("gameId") + "'");
-			if (games.next()) {
-				System.out.println("Getting messages for the game " + (String)req.get("gameId"));
-				String msgIds =  (String)games.getString("allMessages");
-
-				// possible try/catch block here to catch parsing/ formatting errors
-				JSONParser parser = new JSONParser();
-				JSONObject tmp = new JSONObject();
-				try {
-					tmp = (JSONObject)parser.parse("{\"array\": " + msgIds + "}" );
-				} catch (ParseException e) {
-					System.out.println("Messages. Parse error");
-					e.printStackTrace();
-					return null;
-				}
-				JSONArray mIds = (JSONArray) (tmp.get("array"));
-				// possibly update game duration, etc.
-				JSONArray get__Msg =  _getMessages(mIds);
-				System.out.println("DB: sending get_msg " + get__Msg.toJSONString());
-				return get__Msg;
-			}
-		} catch(SQLException ex) {
-			// return something else if exception
-			ex.printStackTrace();
-			return null;
+			status.put("messagestatus", "Server busy, try again.");
+			return status;
 		}
-		return null;
-		*/
-		return null;
+		else if (result == -2) // game room full
+		{
+			status.put("messagestatus", "Unable to join, player count exceeded.");
+			return status;
+		}
+		else if(result == -3) // game room name not found
+		{
+			status.put("messagestatus", "Invalid game room entered.");
+			return status;
+		}
+		else //if (result > 0)
+		{
+			status.put("messagestatus","success");
+			return status;// return actual json for success
+		} 
+		 
 	}
 	// store gameInfo into table, make sure game room name hasn't been used
 	public JSONObject createGame(JSONObject req)
@@ -261,15 +253,16 @@ class Database {
 		return -1;
 	}
 	
-	public int addPlayerToGame(String gameId, JSONObject player)
+	// Prepared statement
+	public int addPlayerToGame(String gameRmName, String playId)
 	{
 		try
 		{
 			stmt =  conn.createStatement();
-			ResultSet games = stmt.executeQuery("select * from Game where gameId=" + gameId);
+			ResultSet games = stmt.executeQuery("select * from Game where gameRoomName='" + gameRmName + "'");
 			if (games.next()) {	
 				String playIds =  games.getString("playerIds");
-				long numPlayer =  Long.parseLong(games.getString("playerCount"));
+				long maxPlayer =  Long.parseLong(games.getString("playerCount"));
 
 				// possible try/catch block here to catch parsing/ formatting errors
 				JSONParser parser = new JSONParser();
@@ -282,11 +275,17 @@ class Database {
 					return -1;
 				}
 				JSONArray pIds = (JSONArray) (tmp.get("array"));
-				pIds.add(player.get("userId"));
-				numPlayer++;
+				int currSize = pIds.size();
+				
+				if (currSize + 1 > maxPlayer)
+				{
+					return -2; // full
+				}
+				pIds.add(playId);
+				
 				String newPlay = pIds.toJSONString();
 				// possibly update game duration, etc.
-				String updateIds = "UPDATE Game SET playerIds=\'" + newPlay + "\', playerCount=" + numPlayer + " WHERE gameId="+gameId;
+				String updateIds = "UPDATE Game SET playerIds='" + newPlay + "' WHERE gameRoomName='"+gameRmName+"'";
 				System.out.println("UPDATING player ids: " + updateIds);
 				int countUpdated = stmt.executeUpdate(updateIds);
 				return countUpdated;
@@ -296,7 +295,7 @@ class Database {
 			ex.printStackTrace();
 			return -1;
 		}
-		return -1;
+		return -3; // gameRoomName not found
 	}
 
 	public boolean doesGameExist(String gameName)
@@ -424,7 +423,7 @@ class Database {
 			for (Object obj: plays)
 			{
 				JSONObject onePlayer = new JSONObject();
-				System.out.println("QUERY: select * from Player where userId = '" + (String)obj + "'");
+				////System.out.println("QUERY: select * from Player where userId = '" + (String)obj + "'");
 				ResultSet aUser = stmt.executeQuery("select * from Player where userId = '" + (String)obj + "'");
 				if (aUser.next())
 				{
@@ -536,13 +535,13 @@ class Database {
 		JSONArray allGames = new JSONArray();
 		JSONObject player = (JSONObject)req.get("Player");
 		String fbID = (String)player.get("facebookUserId");
-		System.out.println("Fetching games for " + fbID);
+		//System.out.println("Fetching games for " + fbID);
 		try
 		{
 			stmt =  conn.createStatement();
 			ResultSet games = stmt.executeQuery("select * from Game where playerIds LIKE \'%" + fbID + "%\'");
 			while (games.next()) {	
-				System.out.println("Fetch a game for playerid");
+				//System.out.println("Fetch a game for playerid");
 				JSONObject oneGame = new JSONObject();
 				JSONObject gameInf = new JSONObject();
 				gameInf.put("gameRoomName", games.getString("gameRoomName"));
@@ -563,13 +562,13 @@ class Database {
 				JSONArray pIds = (JSONArray) (tmp.get("array"));
 				JSONArray playersInGame = getPlayers(pIds);
 
-				System.out.println("players in game " + playersInGame.toJSONString());
+				/////System.out.println("players in game " + playersInGame.toJSONString());
 				oneGame.put("gameInfo", gameInf);
 				oneGame.put("players", playersInGame);
 				oneGame.put("gameId", Long.parseLong(games.getString("gameId")));
 
 				String msgIds =  games.getString("allMessages");
-				System.out.println("message ids" + msgIds);
+				//System.out.println("message ids" + msgIds);
 
 				// get all messages here
 				try {

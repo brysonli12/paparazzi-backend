@@ -17,6 +17,7 @@ CREATE TABLE Game (
 	gameRoomName varchar(20), -- game room name
 	gameDuration varchar(20),
 	playerCount varchar(20), -- number of players
+	-- started OR automatically
 	-- paparazzi int,
 	-- papCounter int, -- paparazzi counter
 	-- host?
