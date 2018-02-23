@@ -2,10 +2,10 @@
 -- this is the default engine
 
 CREATE TABLE Image (
-	imageId varchar(5)
-	sentFrom varchar (20)
-	personInPhoto varchar(20),
-	score int,
+	imageId varchar(30),
+	targetPlayer varchar(20),
+	ratings varchar(60),
+	imageContent varchar(65345),
 	PRIMARY KEY(imageId)
 );
 
@@ -13,7 +13,7 @@ CREATE TABLE Game (
 	gameId varchar(20),
 	playerIds varchar(200),
 	startTime datetime,
-	allMessages varchar(500),
+	allMessages varchar(10000),
 	gameRoomName varchar(20), -- game room name
 	gameDuration varchar(20),
 	playerCount varchar(20), -- number of players
@@ -40,6 +40,6 @@ CREATE TABLE Messages (
 	gameId varchar(20),
 	sendTime datetime,
 	message varchar(50),
-	image varchar(100)
+	image varchar(30) 
 	-- key for this could be userId or gameId
 );

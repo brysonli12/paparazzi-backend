@@ -1,6 +1,7 @@
 import java.sql.*;     // Use classes in java.sql package
-
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.TimeZone;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject; 
@@ -38,6 +39,7 @@ class Database {
 	//                                   SET first = ?, last = ? WHERE ID = ?");
 	private static final String DB_NAME = "ebookshop";
 	private static long msg_Id = 1L;
+	private static final int MAX_IMAGE_LENGTH = 65345;
 	
 	public Database()
 	{
@@ -68,6 +70,17 @@ class Database {
 			return createGame(obj);
 		case 6:
 			return joinGame(obj); // invite code and playerids
+		case 7:
+			return rateImage(obj); // rateimage
+		case 8:
+			JSONObject player = (JSONObject) obj.get("player");
+			String fbUID = (String) player.get("facebookUserId");
+			if(!doesUserExist(fbUID)){
+				t.put("messagestatus", "User does not exist");
+			}else{
+				t.put("messagestatus","success");
+			}
+			return t;
 		}
 		return null;
 
@@ -166,14 +179,16 @@ class Database {
 		System.out.println("STORE MSG: " + req);
 		//
 		/*
-		 * {"Message":{"sentFrom":{"firstName":"Bryan","lastName":"Ho","facebookUserId":"10213545242363283"},"message":"hi"},"GameId":89}
+		 * {"Message":{"sentFrom":{"firstName":"Bryan","lastName":"Ho","facebookUserId":"10213545242363283"},"message":"hi",
+		 * 								 "image":"..............................................."},"GameId":89}
 		 */
 		
 		JSONObject result = new JSONObject();
-		JSONObject msgInfo = (JSONObject) req.get("Message");
-		JSONObject sentFrom = (JSONObject)  msgInfo.get("sentFrom");
+		JSONObject actual_msg = (JSONObject) req.get("Message");
+		JSONObject sentFrom = (JSONObject)  actual_msg.get("sentFrom");
 		String id = (String)sentFrom.get("facebookUserId");
-		String message = (String) msgInfo.get("message");
+		String message = (String) actual_msg.get("message");
+		JSONObject img = (JSONObject)actual_msg.get("image");
 		//System.out.println("GAME ID" + req.get("GameID").getClass().getName());
 		System.out.println("before get game id");
 		String gameId = Long.toString((Long)req.get("GameId"));
@@ -198,8 +213,25 @@ class Database {
 			
 
 			// later store message or image depending on available data
-			storeMsg.setString(5, message);
-			storeMsg.setNull(6, java.sql.Types.VARCHAR); // for now...later store image
+			if (message != null)
+			{
+				storeMsg.setString(5, message);
+				storeMsg.setNull(6, java.sql.Types.VARCHAR); // for now...later store image
+			}
+			else if(img != null && ((String)img.get("imageContent")).length() < MAX_IMAGE_LENGTH)
+			{
+				System.out.println("Image size is " + ((String)img.get("imageContent")).length());
+				storeMsg.setNull(5, java.sql.Types.VARCHAR); // for now...later store image
+				String imgId = insertNewImage(img, (Long)req.get("GameId"));
+				if (imgId.equals("null"))
+					return null;
+				storeMsg.setString(6, imgId);
+				
+			}
+			else
+			{
+				return null;
+			}
 			System.out.println("The SQL query is: " + sqlInsert);  // Echo for debugging
 			System.out.println(storeMsg);
 			int countInserted = storeMsg.executeUpdate();
@@ -217,12 +249,122 @@ class Database {
 		}		
 	}
 
+	public JSONObject rateImage(JSONObject req)
+	{
+		JSONObject result = new JSONObject();
+		String gameRmName = (String)req.get("gameRoomName");
+		String imgId = (String)req.get("imageId");
+		long rate = (Long)req.get("rating");
+		JSONObject play = (JSONObject)req.get("player");
+		String fbId = (String)play.get("facebookUserId");
+		
+		String status = "";
+		if (!doesUserExist(fbId))
+		{
+			status += " User does not exist. ";
+		}
+		if(!doesGameExist(gameRmName))
+		{
+			status += " Game room does not exist. ";
+		}
+		
+		if(status.isEmpty() == false){
+			result.put("messagestatus",status);
+		}
+		try
+		{
+			stmt =  conn.createStatement();
+			System.out.println("finding the game");
+			ResultSet games = stmt.executeQuery("select * from Game where gameRoomName='" + gameRmName + "'");
+			if (games.next()) {	
+				String pIds =  games.getString("playerIds");
+
+				// possible try/catch block here to catch parsing/ formatting errors
+				JSONParser parser = new JSONParser();
+				JSONObject tmp = new JSONObject();
+				try {
+					tmp = (JSONObject)parser.parse("{\"array\": " + pIds + "}" );
+				} catch (ParseException e) {
+					System.out.println("Messages. Parse error");
+					e.printStackTrace();
+					if(result.get("messagestatus") == null)
+					{
+						result.put("messagestatus", "games playerIds list parse error");
+					}
+					else
+						result.put("messagestatus", (String)result.get("messagestatus") + " | games playerIds list parse error");
+					return result;
+				}
+				JSONArray mIds = (JSONArray) (tmp.get("array"));
+				List<String> playerIDS = new ArrayList<String>(mIds);
+				// get index of player located in playerList in Game Table
+				int playIdx = playerIDS.indexOf(fbId);
+				ResultSet rates = stmt.executeQuery("select * from Image where imageId='" + imgId + "'");
+				if (rates.next()) {	
+
+					String ratings_list =  rates.getString("ratings");
+					// possible try/catch block here to catch parsing/ formatting errors
+					// parse already defined JSONParser parser = new JSONParser();
+					JSONObject tmp2 = new JSONObject();
+					try {
+						tmp2 = (JSONObject)parser.parse("{\"array\": " + ratings_list + "}" );
+					} catch (ParseException e) {
+						System.out.println("Messages. Parse error");
+						e.printStackTrace();
+						if(result.get("messagestatus") == null)
+						{
+							result.put("messagestatus", "images ratings_list parse error");
+						}
+						else
+							result.put("messagestatus", (String)result.get("messagestatus") + " | images ratings_list parse error");
+						return result;
+					}
+					JSONArray rNums = (JSONArray) (tmp2.get("array"));
+					List<Long> rating_lst = new ArrayList<Long>(rNums);
+					rating_lst.set(playIdx, rate);
+					
+					String updateIds = "UPDATE Image SET ratings='" + rating_lst.toString() + "' WHERE imageId='"+imgId + "'";
+					
+					System.out.println("UPDATING images rating: " + updateIds);
+					int countUpdated = stmt.executeUpdate(updateIds);
+					result.put("messagestatus","success");
+					// return countUpdated;
+					return result;
+				}
+				// possibly update game duration, etc.
+				
+				
+			}
+		} catch(SQLException ex) {
+			// return something else if exception
+			ex.printStackTrace();
+			if(result.get("messagestatus") == null)
+			{
+				result.put("messagestatus", "Server busy, try again");
+			}
+			else
+				result.put("messagestatus", (String)result.get("messagestatus") + " | Server busy, try again");
+			return result;
+		}
+		
+		
+		// update corresponding index in the rating list (in the Image table)
+		// with the new rating
+		if(result.get("messagestatus") == null)
+		{
+			result.put("messagestatus", "Something went wrong, ");
+		}
+		else
+			result.put("messagestatus", (String)result.get("messagestatus") + " | Something went wrong, and I don't know what. Please try again");
+		return result;
+	}
+	
 	public int addMessageToGame(String gameId, String msgId)
 	{
 		try
 		{
 			stmt =  conn.createStatement();
-			ResultSet games = stmt.executeQuery("select * from Game where gameId=" + gameId);
+			ResultSet games = stmt.executeQuery("select * from Game where gameId='" + gameId + "'");
 			if (games.next()) {	
 				String msgIds =  games.getString("allMessages");
 
@@ -240,7 +382,7 @@ class Database {
 				mIds.add(msgId);
 				String newMsg = mIds.toJSONString();
 				// possibly update game duration, etc.
-				String updateIds = "UPDATE Game SET allMessages='" + newMsg + "' WHERE gameId="+gameId;
+				String updateIds = "UPDATE Game SET allMessages='" + newMsg + "' WHERE gameId='"+gameId + "'";
 				System.out.println("UPDATING player messages: " + updateIds);
 				int countUpdated = stmt.executeUpdate(updateIds);
 				return countUpdated;
@@ -298,6 +440,23 @@ class Database {
 		return -3; // gameRoomName not found
 	}
 
+	public long getPlayerCount(long gameId)
+	{
+		try
+		{
+			stmt =  conn.createStatement();
+			ResultSet gameExists = stmt.executeQuery("select * from Game where gameId = " + gameId);
+			if (!gameExists.next()) // if not found
+			{
+				return -1;
+			}
+			return gameExists.getLong("playerCount");
+		} catch(SQLException ex) {
+			ex.printStackTrace();
+			return -1;
+		}
+	}
+	
 	public boolean doesGameExist(String gameName)
 	{
 		try
@@ -460,7 +619,7 @@ class Database {
 		{
 			stmt =  conn.createStatement();
 
-			System.out.println("QUERY(1): select * from Player where userId = '" + uId + "'");
+			//System.out.println("QUERY(1): select * from Player where userId = '" + uId + "'");
 			ResultSet aUser = stmt.executeQuery("select * from Player where userId = '" + uId + "'");
 			if (aUser.next())
 			{
@@ -499,21 +658,44 @@ class Database {
 			for (Object obj: msgs)
 			{
 				JSONObject oneMsg = new JSONObject();
-				System.out.println("QUERY: select * from Messages where msgId = '" + (String)obj + "'");
+				///System.out.println("QUERY: select * from Messages where msgId = '" + (String)obj + "'");
 				ResultSet aMsg = stmt.executeQuery("select * from Messages where msgId = '" + (String)obj + "'");
 				if (aMsg.next())
 				{
 					//oneMsg.put("image", aMsg.getString("first"));\
 					oneMsg.put("sentFrom", getOnePlayer(aMsg.getString("sentFrom")));
 					String msg = aMsg.getString("message");
-					String img = aMsg.getString("image");
+					String imgId = aMsg.getString("image");
 					if (msg != null)
 					{
 						oneMsg.put("message", msg);
 					}
-					if (img != null)
+					if (imgId != null)
 					{
-						oneMsg.put("image", img);
+						JSONObject anImage = new JSONObject();
+						ResultSet aImg = stmt.executeQuery("select * from Image where imageId = '" + imgId + "'");
+						if(aImg.next())
+						{
+							anImage.put("imageId", imgId);
+							anImage.put("imageContent", aImg.getString("imageContent"));
+							//anImage.put("ratings", aImg.getString("ratings"));
+							String rArray = aImg.getString("ratings");
+							JSONParser parser = new JSONParser();
+							JSONObject tmp = new JSONObject();
+							try {
+								tmp = (JSONObject)parser.parse("{\"array\": " + rArray + "}" );
+							} catch (ParseException e) {
+								System.out.println("ratings araray. Parse error");
+								e.printStackTrace();
+								result.add("Ratings array parse error");
+								return result;
+							}
+							JSONArray pIds = (JSONArray) (tmp.get("array"));
+							
+							anImage.put("ratings", pIds);
+							// insert target player later
+						}
+						oneMsg.put("image", anImage);
 					}
 				}
 				else
@@ -618,6 +800,54 @@ class Database {
 	}
 
 	/**
+	 * Makes a request to the database to store a new image. Returns id of newly stored image.
+	 * 
+	 *
+	 * @param newImg  a JSONObject with imageContent and gameId
+	 * @return      id of newly stored image ("null" if can't store)
+	 */
+	public String insertNewImage(JSONObject newImg, long gameId)
+	{
+		String imgCt = (String)newImg.get("imageContent");
+		String imgId = Long.toString(System.currentTimeMillis());
+		PreparedStatement imgStore = null;
+		try {
+			
+			String sqlInsert = "insert into Image " // need a space
+					+ "values (?,?,?,?)";
+			imgStore =  conn.prepareStatement(sqlInsert);
+			imgStore.setString(1, imgId);
+			imgStore.setNull(2, java.sql.Types.VARCHAR);
+			JSONArray initial_ratings = new JSONArray();
+			long playCt = getPlayerCount(gameId);
+			if (playCt == -1)
+				return "null";
+			for (long tmp = 0L; tmp < playCt; tmp+= 1L)
+			{
+				initial_ratings.add(0);
+				System.out.println("tmp" + tmp + " numPlayers " + playCt);
+			}
+			System.out.println("after the creation of initial ratings");
+			List<String> a = new ArrayList<String>(initial_ratings);
+			System.out.println("the new string as arraylist " + a);
+			imgStore.setString(3, initial_ratings.toJSONString());
+			imgStore.setString(4, imgCt);
+			//System.out.println("The SQL query is: " + sqlInsert);  // Echo for debugging
+			int countInserted = imgStore.executeUpdate();
+			System.out.println(countInserted + " records inserted into Image.\n");
+			if(countInserted > 0)
+				return imgId;
+			else
+				return "null";
+		} catch (SQLException ex) {
+			ex.printStackTrace();
+			return "null"; // failed
+		}
+	}
+
+
+	
+	/**
 	 * Makes a request to the database to insert a new user with userID,
 	 * first, and last name
 	 *
@@ -642,22 +872,49 @@ class Database {
 		return -1;
 	}
 
+
+	/**
+	 * Makes a request to the database to clear all messages.
+	 *
+	 * 
+	 * @return      the number of records updated
+	 */
+	public int clearMessages()
+	{
+		try {
+			stmt =  conn.createStatement();
+			String sqlInsert = "update game set allMessages=\"[]\"";
+			System.out.println("The SQL query is: " + sqlInsert);  // Echo for debugging
+			int countInserted = stmt.executeUpdate(sqlInsert);
+			System.out.println(countInserted + " records updated (messages cleared).\n");
+			
+			sqlInsert = "truncate table messages";
+			System.out.println("The SQL query is: " + sqlInsert);  // Echo for debugging
+			countInserted = stmt.executeUpdate(sqlInsert);
+			System.out.println(countInserted + " records updated (messages table cleared).\n");
+			return countInserted;
+		} catch (SQLException ex) {
+			ex.printStackTrace();
+		}
+		return -1;
+	}
+
 	public static void main(String[] args) {
 		// Some Manual testing
 		Database db_utils = new Database();
-		JSONArray ab = new JSONArray();
-		ab.add("10213545242363283");
-		ab.add("08WK90K00X24GHNR3D90SO");
-		System.out.println("PLAYER INFO\n" + db_utils.getPlayers(ab).toString());
+		//JSONArray ab = new JSONArray();
+		//ab.add("10213545242363283");
+		//ab.add("08WK90K00X24GHNR3D90SO");
+		//System.out.println("PLAYER INFO\n" + db_utils.getPlayers(ab).toString());
 		//System.out.println("GAMES\n" + db_utils._getGames());
 		//{"Message":{"sentFrom":{"firstName":"Bryan","lastName":"Ho","facebookUserId":"10213545242363283"},"message":"hi"},"GameId":89}
 
 		JSONObject testMsg = new JSONObject();
 		testMsg.put("sentFrom", db_utils.getOnePlayer("10213545242363283"));
-		testMsg.put("message", "hi");
+		testMsg.put("message", "hi\0123 4");
 		JSONObject msg = new JSONObject();
 		msg.put("Message", testMsg);
-		msg.put("GameId", 89);
+		msg.put("GameId", 89L);
 		db_utils.storeMessage(msg);
 		//db_utils.insertNewUser("UserID1", "U1_first", "U1_last");
 		//db_utils.updateUser("UserID1", "U1_first", "new_last");
