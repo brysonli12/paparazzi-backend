@@ -129,7 +129,7 @@ class Database {
 		String gameRmName = (String)  gameInfo.get("gameRoomName");
 		String gameDur = Long.toString((Long)gameInfo.get("gameDuration"));
 		String maxPlayerCount = Long.toString((Long)gameInfo.get("playerCount"));
-		JSONArray plays =  (JSONArray)game.get("player");
+		JSONArray plays =  (JSONArray)game.get("players");
 		String plays_for_db = playerToIdList(plays).toJSONString();
 		
 		PreparedStatement storeMsg = null;
@@ -398,6 +398,7 @@ class Database {
 	// Prepared statement
 	public int addPlayerToGame(String gameRmName, String playId)
 	{
+		System.out.println("add player to game" + playId + "   " + gameRmName);
 		try
 		{
 			stmt =  conn.createStatement();
@@ -423,6 +424,7 @@ class Database {
 				{
 					return -2; // full
 				}
+				
 				pIds.add(playId);
 				
 				String newPlay = pIds.toJSONString();
@@ -550,6 +552,7 @@ class Database {
 	@SuppressWarnings("unchecked")
 	private JSONArray playerToIdList(JSONArray playObjs)
 	{
+		//System.out//
 		JSONArray result = new JSONArray();
 		try
 		{
