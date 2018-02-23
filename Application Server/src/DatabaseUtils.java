@@ -398,7 +398,6 @@ class Database {
 	// Prepared statement
 	public int addPlayerToGame(String gameRmName, String playId)
 	{
-		System.out.println("add player to game" + playId + "   " + gameRmName);
 		try
 		{
 			stmt =  conn.createStatement();
@@ -552,7 +551,6 @@ class Database {
 	@SuppressWarnings("unchecked")
 	private JSONArray playerToIdList(JSONArray playObjs)
 	{
-		//System.out//
 		JSONArray result = new JSONArray();
 		try
 		{
