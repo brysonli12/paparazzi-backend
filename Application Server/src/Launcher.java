@@ -7,7 +7,7 @@ import com.sun.net.httpserver.HttpServer;
 public class Launcher {
 
 	public static void main(String[] args) throws IOException {
-		HttpServer server = HttpServer.create(new InetSocketAddress(HelperTestClasses.port),0);
+		HttpServer server = HttpServer.create(new InetSocketAddress(HelperTestClasses.port), 0);
 		server.createContext(HelperTestClasses.context[0], new LoginHandler());
 		server.createContext(HelperTestClasses.context[1], new RetrieveGameHandler());
 		server.createContext(HelperTestClasses.context[2], new SendMessageHandler());
@@ -18,12 +18,12 @@ public class Launcher {
 		server.createContext(HelperTestClasses.context[7], new PlayerExistHandler());
 		server.setExecutor(null);
 		server.start();
-		
+
 		System.out.println("HTTP Server started...");
-		
+
 		Scanner getConsoleInput = new Scanner(System.in);
-		
-		while(getConsoleInput.nextLine().equals("exit") == false) {
+
+		while (getConsoleInput.nextLine().equals("exit") == false) {
 			System.out.println("Unrecognized command");
 			System.out.println("Recognized commands: exit");
 		}
