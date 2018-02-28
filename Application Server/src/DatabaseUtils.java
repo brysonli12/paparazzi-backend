@@ -33,13 +33,34 @@ class Database {
 	private Connection conn = ConnectionManager.getConnection();
 	private Statement stmt;
 
-	// Will use preparedStatements later after getting a simple version working
-	// private PreparedStatement pstmt = conn.prepareStatement("UPDATE users
-	// SET first = ?, last = ? WHERE ID = ?");
 	private static final String DB_NAME = "ebookshop";
 	private static long msg_Id = 1L;
 	private static final int MAX_IMAGE_LENGTH = 65345;
-
+	private static final String GAME_SINGULAR = "game";
+	private static final String GAME_PLURAL = "games";
+	private static final String GAME_INFO = "gameInfo";
+	private static final String GAME_DURATION = "gameDuration";
+	private static final String PLAYER_COUNT = "playerCount";
+	private static final String MSG_STATUS = "messagestatus";
+	private static final String PLAYER_SINGULAR = "player";
+	private static final String PLAYER_PLURAL = "players";
+	private static final String CAPITAL_PLAYER = "Player";
+	private static final String MESSAGE = "message";
+	private static final String CAPITAL_MESSAGE = "Message";
+	private static final String SENT_FROM = "sentFrom";
+	private static final String IMAGE = "image";
+	private static final String GAME_ID = "GameId";
+	private static final String TIMESTAMP = "timestamp";
+	private static final String FB_USER_ID = "facebookUserId";
+	private static final String GAME_RM_NAME = "gameRoomName";
+	private static final String IMAGE_ID = "imageId";
+	private static final String RATING = "rating";
+	private static final String RATINGS_PLURAL = "ratings"; // internal and other
+	private static final String FIRST_NAME = "firstName";
+	private static final String LAST_NAME = "lastName";
+	private static final String LOGIN_STATUS = "loginStatus";
+	private static final String IMAGE_CONTENT = "imageContent";
+	
 	public Database() {
 
 	}
