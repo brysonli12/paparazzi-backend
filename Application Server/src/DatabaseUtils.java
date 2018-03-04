@@ -298,10 +298,9 @@ class Database {
 				if (rates.next()) {
 
 					String ratings_list = rates.getString(RATING_PLURAL);
-					// possible try/catch block here to catch parsing/
+					//  try/catch block here to catch parsing/
 					// formatting errors
-					// parse already defined JSONParser parser = new
-					// JSONParser();
+					// parse already defined 
 					JSONObject tmp2 = new JSONObject();
 					try {
 						tmp2 = (JSONObject) parser.parse("{\"array\": " + ratings_list + "}");
@@ -495,16 +494,13 @@ class Database {
 					updateUser(uId, first, last);
 				}
 				result.put(LOGIN_STATUS, "returningPlayer");
-				//result.put("games", HelperTestClasses.randomGamesClass());
 			} else {
 				System.out.println("insert new player");
 				insertNewUser(uId, first, last);
 				result.put(LOGIN_STATUS, "newPlayer");
-				//games.put("games", "null");
 			}
 		} catch (SQLException ex) {
 			result.put(LOGIN_STATUS, "failed");
-			//result.put("games", "null");
 			return result;
 			// return ex.printStackTrace();
 		}
@@ -551,8 +547,6 @@ class Database {
 			stmt = conn.createStatement();
 			for (Object obj : plays) {
 				JSONObject onePlayer = new JSONObject();
-				//// System.out.println("QUERY: select * from Player where
-				//// userId = '" + (String)obj + "'");
 				ResultSet aUser = stmt.executeQuery("select * from Player where userId = '" + (String) obj + "'");
 				if (aUser.next()) {
 					onePlayer.put(FIRST_NAME, aUser.getString("first"));
@@ -686,8 +680,7 @@ class Database {
 
 				String playIds = games.getString(PLAYER_IDS);
 
-				// possible try/catch block here to catch parsing/ formatting
-				// errors
+				// try/catch block here to catch parsing/ formatting errors
 				JSONParser parser = new JSONParser();
 				JSONObject tmp = new JSONObject();
 				try {
@@ -704,7 +697,6 @@ class Database {
 				oneGame.put(LOWERCASE_GAME_ID, Long.parseLong(games.getString(LOWERCASE_GAME_ID)));
 
 				String msgIds = games.getString("allMessages");
-				// System.out.println("message ids" + msgIds);
 
 				// get all messages here
 				try {
@@ -788,8 +780,6 @@ class Database {
 			System.out.println("the new string as arraylist " + a);
 			imgStore.setString(3, initial_ratings.toJSONString());
 			imgStore.setString(4, imgCt);
-			// System.out.println("The SQL query is: " + sqlInsert); // Echo for
-			// debugging
 			int countInserted = imgStore.executeUpdate();
 			System.out.println(countInserted + " records inserted into Image.\n");
 			if (countInserted > 0)
