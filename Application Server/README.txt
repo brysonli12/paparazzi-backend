@@ -30,3 +30,19 @@ Changed related functions JSONObject response to communicate with frontend
 
 Added:
 retrieve game handler to separate login/ get games. 
+
+2/22/2018 ACCUMULATIVE:
+Special update as we didn't update the changes after 2/7/2018 to now
+
+-Able to send images and messages.
+-Able to rate images.
+-Able to join a game room.
+-Able to check if user is in our database.
+
+-Changes to JSONObjects:
+Message
+Game
+Image
+
+TODO:
+Refactor DataBaseUtils
