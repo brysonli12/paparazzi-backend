@@ -46,3 +46,10 @@ Image
 
 TODO:
 Refactor DataBaseUtils
+
+2/27/2018:
+-Refactored DataBaseUtils
+
+3/3/2018:
+-Added skeleton code for GameLogicThread
+-Added skeleton code for StartGameHandler

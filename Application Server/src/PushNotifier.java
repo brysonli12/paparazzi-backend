@@ -12,7 +12,7 @@ import org.json.simple.JSONObject;
 
 public class PushNotifier {
 
-	public void sendPush() throws IOException {
+	public void sendPush(String message) throws IOException {
 		final String apiKey = "MyPrivateKey";
 		URL url = new URL("https://fcm.googleapis.com/fcm/send");
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();

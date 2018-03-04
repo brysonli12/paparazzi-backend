@@ -98,6 +98,8 @@ class Database {
 				t.put(MSG_STATUS, "success");
 			}
 			return t;
+		case 9:
+			//TODO: ADD START LOGIC
 		}
 		return null;
 
@@ -132,6 +134,7 @@ class Database {
 	}
 
 	// store gameInfo into table, make sure game room name hasn't been used
+	//TODO: CREATE DATABASE THAT INSERTS TIME LIMIT
 	public JSONObject createGame(JSONObject req) {
 		System.out.println("CREATE GAME MSG: " + req);
 

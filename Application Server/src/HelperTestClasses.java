@@ -4,12 +4,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 public class HelperTestClasses {
-	// Server related variables
-	public static final String ipAddress = "127.0.0.1";
-	public static final int port = 8000;
-	public static final String context[] = { "/login", "/getgames", "/sendmessage", "/creategame", "/getmessages",
-			"/joingame", "/rateimage", "/playerexists" };
-
 	// JSON Response related variables
 	private static final String letterList = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	private static final String numberList = "0123456789";

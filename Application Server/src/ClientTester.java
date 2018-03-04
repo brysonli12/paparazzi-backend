@@ -17,8 +17,8 @@ public class ClientTester {
 
 	private static void launchTest() {
 		try {
-			URL url = new URL("http://" + HelperTestClasses.ipAddress + ":" + HelperTestClasses.port
-					+ HelperTestClasses.context[2]);
+			URL url = new URL("http://" + Launcher.IPADDRESS + ":" + Launcher.PORT
+					+ Launcher.CONTEXT[2]);
 			HttpURLConnection connect = (HttpURLConnection) url.openConnection();
 			connect.setDoOutput(true);
 			connect.setRequestMethod("POST");
