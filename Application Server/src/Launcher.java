@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.json.simple.JSONObject;
+
 import com.sun.net.httpserver.HttpServer;
 
 public class Launcher {
@@ -16,7 +18,7 @@ public class Launcher {
 	
 	public static void main(String[] args) throws IOException {
 		AtomicBoolean stop = new AtomicBoolean(false);
-		ArrayList<String> startedGames = new ArrayList<String>();
+		ArrayList<JSONObject> startedGames = new ArrayList<JSONObject>();
 		
 		Thread gameLogic = new Thread(new GameLogicThread(startedGames,stop));
 		gameLogic.start();

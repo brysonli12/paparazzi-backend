@@ -4,11 +4,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.json.simple.JSONObject;
+
 public class GameLogicThread implements Runnable{
-	List<String> startedGames;
+	List<JSONObject> startedGames;
 	AtomicBoolean stop;
 
-	GameLogicThread(ArrayList<String> startedGames, AtomicBoolean stop){
+	GameLogicThread(ArrayList<JSONObject> startedGames, AtomicBoolean stop){
 		this.startedGames = startedGames;
 		this.stop = stop;
 	}
@@ -22,29 +24,86 @@ public class GameLogicThread implements Runnable{
 			PushNotifier notify = new PushNotifier();
 			//util.fetch(startedGames);
 			
-			for(Iterator<String> get = startedGames.iterator(); get.hasNext();) {
-				String gameRoomName = get.next();
+			for(Iterator<JSONObject> get = startedGames.iterator(); get.hasNext();) {
+				JSONObject game = get.next();
 				//BELOW ARE PLACE HOLDERS
 				/*
 				//TODO: CHECK WHO IS PAPARAZZI
 				//IF THERE IS NONE RANDOMLY SELECT ONE
-				if(util.getPaparazzi(gameRoomName) == "") {
-					util.setPaparazzi(gameRoomName);
+				if(game.get(PAPARAZZI) == "") {
+					JSONArray playerInGame = game.get(PLAYERS);
+					JSONArray playerBeenPaparazzi = game.get(PAPARAZZITURNS);
+					
+					Random rand = new Random();
+					int index = rand.nextInt(0,playerInGame.size());
+					String paparazziPlayer = playerInGame[index];
+					
+					playerBeenPaparazzi[index]++;
+					
+					util.setPaparazzi(gameRoomName,paparazziPlayer);
+					game.put(PAPARAZZI,paparazziPlayer);
 					notify.sendPush(message);
+					continue;
 				}
 				
 				//TODO: TIME IS UP
 				//SELECT NEW PAPARAZZI
-				if(util.getStartTime(gameRoomName) > 0 && util.getTotalTurns(gameRoomName) < 0) {
-					util.setPaparazzi(gameRoomName);
+				JSONArray playerBeenPaparazzi = game.get(PAPARAZZITURNS);
+				int totalTurns = 0;
+				int max = 0;
+				for(int i = 0; i < playerBeenPaparazzi.size(); i++){
+					totalTurns += playerBeenPaparazzi[i];
+					if(max < playerBeenPaparazzi[i]){
+						max = playerBeenPaparazzi[i];
+					}
+				}
+				
+				if(System.currentTimeMillis() - (game.get(STARTTIME) + totalTurns * game.get(TIMEDURATIONPERPERSON)) > 0
+				 	&& totalTurns < game.get(MAXTURNS) * game.get(PLAYERCOUNT)) {
+				 	
+					JSONArray playerInGame = game.get(PLAYERS);
+					
+					Random rand = new Random();
+					int index = 0;
+					String paparazziPlayer = playerInGame[rand.nextInt(0,playerInGame.size())];
+					boolean allSame = true;
+					int compare = playerBeenPaparazzi[0];
+					ArrayList<Integer> indicesToSelect = new ArrayList<Integer>();
+					
+					for(int i = 1; i < playerBeenPaparazzi.size(); i++){
+						if(playerBeenPaparazzi[i] != compare){
+							allSame = false;
+							indiciesToSelect.add(i);
+						}
+					}
+					
+					if(allSame == true){
+						index = rand.nextInt(0,playerInGame.size());
+					}else{
+						index = rand.nextInt(0,indicesToSelect.size());
+					}
+				
+					String paparazziPlayer = playerInGame[index];
+					playerBeenPaparazzi[index]++;
+				
+					util.setPaparazzi(gameRoomName,paparazziPlayer);
+					game.put(PAPARAZZI,paparazziPlayer);
 					notify.sendPush(message);
+					continue;
 				}
 				
 				//TODO: IF EVERYONE HAS BEEN PAPARAZZI
 				//END GAME AND COUNT SCORES
-				else {
+				if(System.currentTimeMillis() - (game.get(STARTTIME) + totalTurns * game.get(TIMEDURATIONPERPERSON)) > 0
+				 	&& totalTurns == game.get(MAXTURNS) * game.get(PLAYERCOUNT)) {
+				 	
+				 	//TODO: GET ALL IMAGES IN MESSAGES OF THAT GAME AND SUM THE RATINGS
+				 	
 					util.endGame(gameRoomName);
+					game.put(STARTGAME,true);
 					notify.sendPush(message);
+					get.remove();
+					continue;
 				}
 				*/
 			}
