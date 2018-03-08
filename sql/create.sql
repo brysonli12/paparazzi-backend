@@ -17,9 +17,9 @@ CREATE TABLE Game (
 	gameRoomName varchar(20), -- game room name
 	gameDuration varchar(20),
 	playerCount varchar(20), -- number of players
-	-- started OR canJoin
-	-- paparazzi int,
-	-- papCounter int, -- paparazzi counter
+	started int,
+	currentPaparazzi varchar(20), -- or ID of playerr
+	papHistory varchar(200)
 	-- host?
 
 	PRIMARY KEY(gameId)
