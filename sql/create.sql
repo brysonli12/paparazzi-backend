@@ -20,6 +20,7 @@ CREATE TABLE Game (
 	timePerPerson int,
 	maxTurns int, # always 2
 	started int,
+	paparazzi varchar(30), -- or ID of player
 	target varchar(30),
 	papHistory varchar(200),
 	-- get image ids past the start time

@@ -53,3 +53,7 @@ Refactor DataBaseUtils
 3/3/2018:
 -Added skeleton code for GameLogicThread
 -Added skeleton code for StartGameHandler
+
+3/8/2018:
+-Worked on and finished starting game
+-Worked on initial steps of Game Logic (already have logic written down, mostly just converting to code)

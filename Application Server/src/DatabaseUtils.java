@@ -114,6 +114,8 @@ class Database {
 		JSONObject result = new JSONObject();
 		try {
 			stmt = conn.createStatement();
+			// need to initialize the array of paparazzi scores somewhere
+			// either in createGame and/or add player...
 			String updateIds = "UPDATE Game SET started=1 WHERE gameRoomName='" + gameName + "'";
 			System.out.println("starting game ids: " + updateIds);
 			int countUpdated = stmt.executeUpdate(updateIds);
@@ -222,6 +224,51 @@ class Database {
 
 	}
 
+	public void setPaparazzi(String gameName, JSONObject playObj)
+	{
+		
+		String playId = (String) playObj.get(FB_USER_ID);
+		try {
+			stmt = conn.createStatement();
+			ResultSet games = stmt.executeQuery("select * from Game where " + GAME_RM_NAME + "='" + gameName + "'");
+			if(games.next())
+			{
+				String history = games.getString("papHistory");
+				JSONArray papHistory = Database.parseJSONArrayString(history);
+				List<Integer> papPast = new ArrayList<Integer>(papHistory);
+				
+				// 
+				String plays = games.getString("playerIds");
+				JSONArray pids = Database.parseJSONArrayString(plays);
+				List<String> playerIds = new ArrayList<String>(pids);
+				
+				int playIdx = playerIds.indexOf(playId);
+				
+				papPast.set(playIdx, papPast.get(playIdx) + 1);
+				
+				// set the paparazzi and increment the corresponding index in the
+				// paparazzi history
+				// store back in database
+				String updateStmt = "update Game set paparazzi='"+playId + "'," +
+									"papHistory='" + papPast.toString() + "'" +
+									"where " + GAME_RM_NAME + "='" + gameName + "'";
+				int result = stmt.executeUpdate(updateStmt);
+				if(result < 0)
+				{
+					System.out.println("Error updating paparazzi and corresponding  history");
+				}
+				// for gamelogic thread, pass back first person for paparazzi and target
+				// (for now)
+			}
+			
+		}catch (SQLException ex) {
+			System.out.println("SQL Exception while updating pap & history");
+			ex.printStackTrace();
+			//return null;
+		}
+		
+	}
+	
 	// store gameInfo into table, make sure game room name hasn't been used
 	//TODO: CREATE DATABASE THAT INSERTS TIME LIMIT
 	public JSONObject createGame(JSONObject req) {
