@@ -6,7 +6,7 @@
 		</accessrules>
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="C:/Users/macro/eclipse-workspace/external jars and dlls/mysql-connector-java-5.1.45-bin.jar"/>
-	<classpathentry kind="lib" path="C:/Users/macro/eclipse-workspace/external jars and dlls/json-simple-1.1.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/User/Desktop/mysql-connector-java-5.1.45-bin.jar"/>
+	<classpathentry kind="lib" path="C:/Users/User/Downloads/json-simple-1.1.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

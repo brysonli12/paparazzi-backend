@@ -49,18 +49,12 @@ public class StartGameHandler implements HttpHandler {
 			}
 
 			// Send back JSONObject or a push notification
-			JSONObject response = new JSONObject();
+			JSONObject response = data;
 			byte[] responseBytes;
 
-			if (requestType == -1 || data == null) {
-				response.put("messagestatus", "Game room name already taken.");
-				responseBytes = response.toString().getBytes();
-				t.sendResponseHeaders(200, responseBytes.length);
-			} else {
-				response.put("messagestatus", "success");
-				responseBytes = response.toString().getBytes();
-				t.sendResponseHeaders(200, responseBytes.length);
-			}
+			responseBytes = response.toString().getBytes();
+			t.sendResponseHeaders(200, responseBytes.length);
+			
 
 			OutputStream os = t.getResponseBody();
 			os.write(responseBytes);

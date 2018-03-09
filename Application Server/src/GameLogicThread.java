@@ -22,7 +22,7 @@ public class GameLogicThread implements Runnable{
 			//THAT LOGIC MUST BE DONE IN DATABASE UTILS
 			Database util = new Database();
 			PushNotifier notify = new PushNotifier();
-			//util.fetch(startedGames);
+			//util.fetchStarted(startedGames); // don't return games already in the list
 			
 			for(Iterator<JSONObject> get = startedGames.iterator(); get.hasNext();) {
 				JSONObject game = get.next();

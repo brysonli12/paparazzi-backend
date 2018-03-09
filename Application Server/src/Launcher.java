@@ -32,6 +32,7 @@ public class Launcher {
 		server.createContext(CONTEXT[5], new JoinGameHandler());
 		server.createContext(CONTEXT[6], new RateImageHandler());
 		server.createContext(CONTEXT[7], new PlayerExistHandler());
+		server.createContext(CONTEXT[8], new StartGameHandler());
 		server.setExecutor(null);
 		server.start();
 
