@@ -9,7 +9,8 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 class ConnectionManager {
-	private static final String URL = "jdbc:mysql://localhost:3306/ebookshop?useSSL=false";
+	private static final String DB_NAME = "ebookshop";
+	private static final String URL = "jdbc:mysql://localhost:3306/"+ConnectionManager.DB_NAME + "?useSSL=false";
 	private static final String USER = "root";
 	private static final String PASSWORD = "cs130";
 
@@ -33,7 +34,7 @@ class Database {
 	private Connection conn = ConnectionManager.getConnection();
 	private Statement stmt;
 
-	private static final String DB_NAME = "ebookshop";
+
 	private static long msg_Id = 1L;
 	private static final int MAX_IMAGE_LENGTH = 65345;
 	private static final String GAME_SINGULAR = "game";
@@ -63,7 +64,8 @@ class Database {
 	private static final String LOGIN_STATUS = "loginStatus";
 	private static final String IMAGE_CONTENT = "imageContent";
 	private static final String PLAYER_IDS = "playerIds";
-	
+	private static final String STARTED_GAME = "started";
+
 	public Database() {
 
 	}
@@ -98,11 +100,46 @@ class Database {
 				t.put(MSG_STATUS, "success");
 			}
 			return t;
+		case 9:
+			return startGame(obj);//TODO: ADD START LOGIC
 		}
 		return null;
 
 	}
 
+	public JSONObject startGame(JSONObject req){
+		JSONObject aGame = (JSONObject) req.get(GAME_SINGULAR);
+		JSONObject gameInfo = (JSONObject) aGame.get(GAME_INFO);
+		String gameName = (String)gameInfo.get(GAME_RM_NAME);
+		JSONObject result = new JSONObject();
+		try {
+			stmt = conn.createStatement();
+			// need to initialize the array of paparazzi scores somewhere
+			// either in createGame and/or add player...
+			String updateIds = "UPDATE Game SET started=1 WHERE gameRoomName='" + gameName + "'";
+			System.out.println("starting game ids: " + updateIds);
+			int countUpdated = stmt.executeUpdate(updateIds);
+			if (countUpdated > 0)
+			{
+				result.put("messagestatus", "success");
+			}
+			else
+			{
+				result.put("messagestatus", "server busy, try again");
+			}
+			return result;
+
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			result.put("messagestatus", "server busy, try again");
+			return result;
+		}
+
+
+
+	}
 	// JSONArray wrapped in JSONObject --> unwrapped
 	public JSONObject joinGame(JSONObject req) {
 		JSONObject status = new JSONObject();
@@ -123,7 +160,12 @@ class Database {
 		{
 			status.put(MSG_STATUS, "Invalid game room entered.");
 			return status;
-		} else // if (result > 0)
+		} else if(result == -4)
+		{
+			status.put(MSG_STATUS, "Unable to join, game started.");
+			return status;
+		}
+		else // if (result > 0)
 		{
 			status.put(MSG_STATUS, "success");
 			return status;// return actual json for success
@@ -131,7 +173,104 @@ class Database {
 
 	}
 
+	public void fetchStarted(List<JSONObject> startedGames)
+	{
+		List<String> existing = new ArrayList<String>();
+		for (JSONObject aGame: startedGames)
+		{
+			existing.add((String)aGame.get(GAME_RM_NAME));
+		}
+		try {
+			ResultSet games = stmt.executeQuery("select * from Game where started=1");
+			while(games.next())
+			{
+				String currGame = games.getString(GAME_RM_NAME);
+				if (!existing.contains(currGame))
+				{
+
+					// paparazzi field
+					// start time field, time duration per person
+					// max turnns
+					// player count
+					JSONObject oneGame = new JSONObject();
+					JSONObject gameInf = new JSONObject();
+					gameInf.put(GAME_RM_NAME, games.getString(GAME_RM_NAME));
+					gameInf.put(GAME_DURATION, Long.parseLong(games.getString(GAME_DURATION)));
+					gameInf.put(PLAYER_COUNT, Long.parseLong(games.getString(PLAYER_COUNT)));
+
+					String playIds = games.getString(PLAYER_IDS);
+
+					JSONArray pIds = Database.parseJSONArrayString(playIds);
+					JSONArray playersInGame = getPlayers(pIds);
+
+					oneGame.put(GAME_INFO, gameInf);
+					oneGame.put(PLAYER_PLURAL, playersInGame);
+					oneGame.put(LOWERCASE_GAME_ID, Long.parseLong(games.getString(LOWERCASE_GAME_ID)));
+
+					//String msgIds = games.getString("allMessages");
+
+					// get all messages here
+					//JSONArray mIds = Database.parseJSONArrayString(msgIds);
+					//JSONArray allMsg = _getMessages(mIds);
+					//oneGame.put(MESSAGE_PLURAL, allMsg);
+
+					startedGames.add(oneGame);
+
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public void setPaparazzi(String gameName, JSONObject playObj)
+	{
+		
+		String playId = (String) playObj.get(FB_USER_ID);
+		try {
+			stmt = conn.createStatement();
+			ResultSet games = stmt.executeQuery("select * from Game where " + GAME_RM_NAME + "='" + gameName + "'");
+			if(games.next())
+			{
+				String history = games.getString("papHistory");
+				JSONArray papHistory = Database.parseJSONArrayString(history);
+				List<Integer> papPast = new ArrayList<Integer>(papHistory);
+				
+				// 
+				String plays = games.getString("playerIds");
+				JSONArray pids = Database.parseJSONArrayString(plays);
+				List<String> playerIds = new ArrayList<String>(pids);
+				
+				int playIdx = playerIds.indexOf(playId);
+				
+				papPast.set(playIdx, papPast.get(playIdx) + 1);
+				
+				// set the paparazzi and increment the corresponding index in the
+				// paparazzi history
+				// store back in database
+				String updateStmt = "update Game set paparazzi='"+playId + "'," +
+									"papHistory='" + papPast.toString() + "'" +
+									"where " + GAME_RM_NAME + "='" + gameName + "'";
+				int result = stmt.executeUpdate(updateStmt);
+				if(result < 0)
+				{
+					System.out.println("Error updating paparazzi and corresponding  history");
+				}
+				// for gamelogic thread, pass back first person for paparazzi and target
+				// (for now)
+			}
+			
+		}catch (SQLException ex) {
+			System.out.println("SQL Exception while updating pap & history");
+			ex.printStackTrace();
+			//return null;
+		}
+		
+	}
+	
 	// store gameInfo into table, make sure game room name hasn't been used
+	//TODO: CREATE DATABASE THAT INSERTS TIME LIMIT
 	public JSONObject createGame(JSONObject req) {
 		System.out.println("CREATE GAME MSG: " + req);
 
@@ -150,8 +289,8 @@ class Database {
 		}
 
 		try {
-
-			String sqlInsert = "insert into Game " + "values (?,?,?,?,?,?,?)";
+			//// new fields
+			String sqlInsert = "insert into Game " + "values (?,?,?,?,?,?,?,?,?,?,?,?)";
 			storeMsg = conn.prepareStatement(sqlInsert);
 
 			Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -159,18 +298,23 @@ class Database {
 			storeMsg.setLong(1, time);
 			storeMsg.setString(2, plays_for_db);
 
-			Timestamp timestamp = new Timestamp(time);
-			storeMsg.setTimestamp(3, timestamp);
-
+			//Timestamp timestamp = new Timestamp(time);
+			//storeMsg.setTimestamp(3, timestamp);
+			storeMsg.setLong(3, System.currentTimeMillis());
 			storeMsg.setString(4, "[]");
 			storeMsg.setString(5, gameRmName);
 			storeMsg.setString(6, gameDur);
 			storeMsg.setString(7, maxPlayerCount);
 
+			storeMsg.setNull(8, java.sql.Types.INTEGER);
+			storeMsg.setNull(9, java.sql.Types.INTEGER);
+			storeMsg.setInt(10, 0);
+			storeMsg.setNull(11, java.sql.Types.VARCHAR);
+			storeMsg.setNull(12, java.sql.Types.VARCHAR);
 			// later store message or image depending on available data
 			// storeMsg.setString(5, message);
 			System.out.println("The SQL query is: " + sqlInsert); // Echo for
-																	// debugging
+			// debugging
 			System.out.println(storeMsg);
 			int countInserted = storeMsg.executeUpdate();
 			System.out.println(countInserted + " records inserted into Game.\n");
@@ -232,7 +376,7 @@ class Database {
 				return null;
 			}
 			System.out.println("The SQL query is: " + sqlInsert); // Echo for
-																	// debugging
+			// debugging
 			System.out.println(storeMsg);
 			int countInserted = storeMsg.executeUpdate();
 			System.out.println(countInserted + " records inserted into Message table.\n");
@@ -391,6 +535,9 @@ class Database {
 			stmt = conn.createStatement();
 			ResultSet games = stmt.executeQuery("select * from Game where gameRoomName='" + gameRmName + "'");
 			if (games.next()) {
+				int gameStarted = games.getInt(STARTED_GAME);
+				if (gameStarted == 1)
+					return -4;
 				String playIds = games.getString(PLAYER_IDS);
 				long maxPlayer = Long.parseLong(games.getString(PLAYER_COUNT));
 
@@ -601,6 +748,28 @@ class Database {
 		return onePlayer;
 	}
 
+	public static JSONArray parseJSONArrayString(String anArray)
+	{
+		return Database.parseJSONArrayString(anArray, "");
+	}	
+
+	public static JSONArray parseJSONArrayString(String anArray, String errorCodes)
+	{
+		JSONParser parser = new JSONParser();
+		JSONObject tmp = new JSONObject();
+		try {
+			tmp = (JSONObject) parser.parse("{\"array\": " + anArray + "}");
+		} catch (ParseException e) {
+			System.out.println("JSON array parse error");
+			e.printStackTrace();
+			JSONArray result = new JSONArray();
+			result.add("array parse error");
+			return result;
+		}
+		JSONArray pIds = (JSONArray) (tmp.get("array"));
+		return pIds;
+	}
+
 	/**
 	 * Return a JSONArray of messages (JSONObjects)
 	 *
@@ -632,17 +801,8 @@ class Database {
 							anImage.put(IMAGE_ID, imgId);
 							anImage.put(IMAGE_CONTENT, aImg.getString(IMAGE_CONTENT));
 							String rArray = aImg.getString(RATING_PLURAL);
-							JSONParser parser = new JSONParser();
-							JSONObject tmp = new JSONObject();
-							try {
-								tmp = (JSONObject) parser.parse("{\"array\": " + rArray + "}");
-							} catch (ParseException e) {
-								System.out.println("ratings araray. Parse error");
-								e.printStackTrace();
-								result.add("Ratings array parse error");
-								return result;
-							}
-							JSONArray pIds = (JSONArray) (tmp.get("array"));
+							JSONArray pIds = Database.parseJSONArrayString(rArray);
+
 
 							anImage.put(RATING_PLURAL, pIds);
 							// insert target player later
@@ -680,16 +840,7 @@ class Database {
 
 				String playIds = games.getString(PLAYER_IDS);
 
-				// try/catch block here to catch parsing/ formatting errors
-				JSONParser parser = new JSONParser();
-				JSONObject tmp = new JSONObject();
-				try {
-					tmp = (JSONObject) parser.parse("{\"array\": " + playIds + "}");
-				} catch (ParseException e) {
-					System.out.println("Players. Parse error");
-					e.printStackTrace();
-				}
-				JSONArray pIds = (JSONArray) (tmp.get("array"));
+				JSONArray pIds = Database.parseJSONArrayString(playIds);
 				JSONArray playersInGame = getPlayers(pIds);
 
 				oneGame.put(GAME_INFO, gameInf);
@@ -699,16 +850,11 @@ class Database {
 				String msgIds = games.getString("allMessages");
 
 				// get all messages here
-				try {
-					tmp = (JSONObject) parser.parse("{\"array\": " + msgIds + "}");
-				} catch (ParseException e) {
-					System.out.println("Msg. Parse error");
-					e.printStackTrace();
-				}
-				JSONArray mIds = (JSONArray) (tmp.get("array"));
+				JSONArray mIds = Database.parseJSONArrayString(msgIds);
 				JSONArray allMsg = _getMessages(mIds);
 				oneGame.put(MESSAGE_PLURAL, allMsg);
 
+				oneGame.put(STARTED_GAME, games.getInt(STARTED_GAME));
 				allGames.add(oneGame);
 
 			}
@@ -737,7 +883,7 @@ class Database {
 			String strUpdate = "UPDATE Player SET first = '" + first + "', last = '" + last + "' WHERE userId = " + "'"
 					+ id + "'";
 			System.out.println("The SQL query is: " + strUpdate); // Echo for
-																	// debugging
+			// debugging
 			int countUpdated = stmt.executeUpdate(strUpdate);
 			System.out.println(countUpdated + " records updated.\n");
 			return countUpdated;
@@ -810,7 +956,7 @@ class Database {
 			String sqlInsert = "insert into Player " // need a space
 					+ "values (\'" + id + "\', \'" + first + "\', \'" + last + "\')";
 			System.out.println("The SQL query is: " + sqlInsert); // Echo for
-																	// debugging
+			// debugging
 			int countInserted = stmt.executeUpdate(sqlInsert);
 			System.out.println(countInserted + " records inserted.\n");
 			return countInserted;
@@ -831,13 +977,13 @@ class Database {
 			stmt = conn.createStatement();
 			String sqlInsert = "update game set allMessages=\"[]\"";
 			System.out.println("The SQL query is: " + sqlInsert); // Echo for
-																	// debugging
+			// debugging
 			int countInserted = stmt.executeUpdate(sqlInsert);
 			System.out.println(countInserted + " records updated (messages cleared).\n");
 
 			sqlInsert = "truncate table messages";
 			System.out.println("The SQL query is: " + sqlInsert); // Echo for
-																	// debugging
+			// debugging
 			countInserted = stmt.executeUpdate(sqlInsert);
 			System.out.println(countInserted + " records updated (messages table cleared).\n");
 			return countInserted;

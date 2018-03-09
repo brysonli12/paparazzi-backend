@@ -12,15 +12,18 @@ CREATE TABLE Image (
 CREATE TABLE Game (
 	gameId varchar(20),
 	playerIds varchar(200),
-	startTime datetime,
+	startTime Bigint, -- update every new game
 	allMessages varchar(10000),
 	gameRoomName varchar(20), -- game room name
 	gameDuration varchar(20),
 	playerCount varchar(20), -- number of players
-	-- started OR canJoin
-	-- paparazzi int,
-	-- papCounter int, -- paparazzi counter
-	-- host?
+	timePerPerson int,
+	maxTurns int, # always 2
+	started int,
+	paparazzi varchar(30), -- or ID of player
+	target varchar(30),
+	papHistory varchar(200),
+	-- get image ids past the start time
 
 	PRIMARY KEY(gameId)
 );
