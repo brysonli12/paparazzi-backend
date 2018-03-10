@@ -310,7 +310,17 @@ class Database {
 			storeMsg.setNull(9, java.sql.Types.INTEGER);
 			storeMsg.setInt(10, 0);
 			storeMsg.setNull(11, java.sql.Types.VARCHAR);
-			storeMsg.setNull(12, java.sql.Types.VARCHAR);
+			
+			JSONArray initial_pap_history = new JSONArray();
+			
+			long playCt = (Long) gameInfo.get(PLAYER_COUNT);
+			//if (playCt == -1)
+			//	return "null";
+			for (long tmp = 0L; tmp < playCt; tmp += 1L) {
+				initial_pap_history.add(0);
+			}
+			storeMsg.setString(12, initial_pap_history.toJSONString());
+		
 			// later store message or image depending on available data
 			// storeMsg.setString(5, message);
 			System.out.println("The SQL query is: " + sqlInsert); // Echo for
