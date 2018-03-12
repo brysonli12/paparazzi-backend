@@ -41,7 +41,7 @@ public class GameLogicThread implements Runnable{
 					playerBeenPaparazzi[index]++;
 					
 					util.setPaparazzi(gameRoomName,paparazziPlayer);
-					game.put(PAPARAZZI,paparazziPlayer);
+					get.remove();
 					notify.sendPush(message);
 					continue;
 				}
@@ -87,20 +87,27 @@ public class GameLogicThread implements Runnable{
 					playerBeenPaparazzi[index]++;
 				
 					util.setPaparazzi(gameRoomName,paparazziPlayer);
-					game.put(PAPARAZZI,paparazziPlayer);
+					get.remove()
 					notify.sendPush(message);
 					continue;
 				}
 				
 				//TODO: IF EVERYONE HAS BEEN PAPARAZZI
-				//END GAME AND COUNT SCORES
+				//END GAME AND START RATING TIMER DURATION
 				if(System.currentTimeMillis() - (game.get(STARTTIME) + totalTurns * game.get(TIMEDURATIONPERPERSON)) > 0
 				 	&& totalTurns == game.get(MAXTURNS) * game.get(PLAYERCOUNT)) {
 				 	
+					util.endGame(gameRoomName,state);
+					notify.sendPush(message);
+					get.remove();
+					continue;
+				}
+				
+				if(System.currentTimeMillis() - game.get(STARTLASTRATING) < 1000*60*10) {
+				 	
 				 	//TODO: GET ALL IMAGES IN MESSAGES OF THAT GAME AND SUM THE RATINGS
 				 	
-					util.endGame(gameRoomName);
-					game.put(STARTGAME,true);
+					util.endGame(gameRoomName,state);
 					notify.sendPush(message);
 					get.remove();
 					continue;
