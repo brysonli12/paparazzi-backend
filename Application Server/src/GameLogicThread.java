@@ -2,8 +2,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 public class GameLogicThread implements Runnable{
@@ -22,37 +24,44 @@ public class GameLogicThread implements Runnable{
 			//THAT LOGIC MUST BE DONE IN DATABASE UTILS
 			Database util = new Database();
 			PushNotifier notify = new PushNotifier();
-			//util.fetchStarted(startedGames); // don't return games already in the list
+			util.fetchStarted(startedGames); // don't return games already in the list
 			
 			for(Iterator<JSONObject> get = startedGames.iterator(); get.hasNext();) {
 				JSONObject game = get.next();
 				//BELOW ARE PLACE HOLDERS
-				/*
+				
 				//TODO: CHECK WHO IS PAPARAZZI
 				//IF THERE IS NONE RANDOMLY SELECT ONE
-				if(game.get(PAPARAZZI) == "") {
-					JSONArray playerInGame = game.get(PLAYERS);
-					JSONArray playerBeenPaparazzi = game.get(PAPARAZZITURNS);
+				if(game.get(Database.PAPARAZZI).equals("")) {
+					System.out.println(game.toString());
+					
+					JSONArray playerInGame = (JSONArray) game.get(Database.PLAYER_PLURAL);
+					JSONArray playerBeenPaparazzi = (JSONArray) game.get(Database.PAPHISTORY);
+					JSONObject gameInfo = (JSONObject) game.get(Database.GAME_INFO);
 					
 					Random rand = new Random();
-					int index = rand.nextInt(0,playerInGame.size());
-					String paparazziPlayer = playerInGame[index];
+					int index = rand.nextInt(playerInGame.size());
+					JSONObject paparazziPlayer = (JSONObject) playerInGame.get(index);
 					
-					playerBeenPaparazzi[index]++;
+					int index2 = rand.nextInt(playerInGame.size());
+					while(index == index2){
+						index2 = rand.nextInt(playerInGame.size());
+					}
+					JSONObject targetPlayer = (JSONObject) playerInGame.get(index2);
 					
-					util.setPaparazzi(gameRoomName,paparazziPlayer);
+					util.setPapTarget((String) gameInfo.get(Database.GAME_RM_NAME),paparazziPlayer,targetPlayer);
 					get.remove();
-					notify.sendPush(message);
+					//notify.sendPush(message);
 					continue;
 				}
-				
+				/*
 				//TODO: TIME IS UP
 				//SELECT NEW PAPARAZZI
-				JSONArray playerBeenPaparazzi = game.get(PAPARAZZITURNS);
+				JSONArray playerBeenPaparazzi = (JSONArray) game.get(Database.PAPHISTORY);
 				int totalTurns = 0;
 				int max = 0;
 				for(int i = 0; i < playerBeenPaparazzi.size(); i++){
-					totalTurns += playerBeenPaparazzi[i];
+					totalTurns += playerBeenPaparazzi.get(i);
 					if(max < playerBeenPaparazzi[i]){
 						max = playerBeenPaparazzi[i];
 					}
@@ -86,12 +95,12 @@ public class GameLogicThread implements Runnable{
 					String paparazziPlayer = playerInGame[index];
 					playerBeenPaparazzi[index]++;
 				
-					util.setPaparazzi(gameRoomName,paparazziPlayer);
-					get.remove()
-					notify.sendPush(message);
+					util.setPapTarget((String) gameInfo.get(Database.GAME_RM_NAME),paparazziPlayer,targetPlayer);
+					get.remove();
+					//notify.sendPush(message);
 					continue;
 				}
-				
+				/*
 				//TODO: IF EVERYONE HAS BEEN PAPARAZZI
 				//END GAME AND START RATING TIMER DURATION
 				if(System.currentTimeMillis() - (game.get(STARTTIME) + totalTurns * game.get(TIMEDURATIONPERPERSON)) > 0

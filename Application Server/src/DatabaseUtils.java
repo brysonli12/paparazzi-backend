@@ -39,12 +39,12 @@ class Database {
 	private static final int MAX_IMAGE_LENGTH = 65345;
 	private static final String GAME_SINGULAR = "game";
 	private static final String GAME_PLURAL = "games";
-	private static final String GAME_INFO = "gameInfo";
+	public static final String GAME_INFO = "gameInfo";
 	private static final String GAME_DURATION = "gameDuration";
 	private static final String PLAYER_COUNT = "playerCount";
 	private static final String MSG_STATUS = "messagestatus";
 	private static final String PLAYER_SINGULAR = "player";
-	private static final String PLAYER_PLURAL = "players";
+	public static final String PLAYER_PLURAL = "players";
 	private static final String CAPITAL_PLAYER = "Player";
 	private static final String MESSAGE = "message";
 	private static final String MESSAGE_PLURAL = "messages";
@@ -55,7 +55,7 @@ class Database {
 	private static final String LOWERCASE_GAME_ID = "gameId";
 	private static final String TIMESTAMP = "timestamp";
 	private static final String FB_USER_ID = "facebookUserId";
-	private static final String GAME_RM_NAME = "gameRoomName";
+	public static final String GAME_RM_NAME = "gameRoomName";
 	private static final String IMAGE_ID = "imageId";
 	private static final String RATING = "rating";
 	private static final String RATING_PLURAL = "ratings"; // internal and other
@@ -65,6 +65,9 @@ class Database {
 	private static final String IMAGE_CONTENT = "imageContent";
 	private static final String PLAYER_IDS = "playerIds";
 	private static final String STARTED_GAME = "started";
+	public static final String PAPHISTORY = "papHistory";
+	public static final String PAPARAZZI = "paparazzi";
+	public static final String TARGET = "target";
 
 	public Database() {
 
@@ -112,6 +115,13 @@ class Database {
 		JSONObject gameInfo = (JSONObject) aGame.get(GAME_INFO);
 		String gameName = (String)gameInfo.get(GAME_RM_NAME);
 		JSONObject result = new JSONObject();
+		JSONArray playerArray = (JSONArray) aGame.get(PLAYER_PLURAL);
+		
+		if(playerArray.size() < 2){
+			result.put("messagestatus", "not enough players");
+			return result;
+		}
+		
 		try {
 			stmt = conn.createStatement();
 			// need to initialize the array of paparazzi scores somewhere
@@ -175,12 +185,14 @@ class Database {
 
 	public void fetchStarted(List<JSONObject> startedGames)
 	{
+		
 		List<String> existing = new ArrayList<String>();
 		for (JSONObject aGame: startedGames)
 		{
 			existing.add((String)aGame.get(GAME_RM_NAME));
 		}
 		try {
+			stmt = conn.createStatement();
 			ResultSet games = stmt.executeQuery("select * from Game where started=1");
 			while(games.next())
 			{
@@ -207,6 +219,14 @@ class Database {
 					oneGame.put(PLAYER_PLURAL, playersInGame);
 					oneGame.put(LOWERCASE_GAME_ID, Long.parseLong(games.getString(LOWERCASE_GAME_ID)));
 
+					String papHist = games.getString(PAPHISTORY);
+					JSONArray pHist = Database.parseJSONArrayString(papHist);
+					
+					oneGame.put(PAPHISTORY, pHist);
+					
+					String pap = games.getString(PAPARAZZI);
+					//JSONObject plays = getOnePlayer(pap);
+					oneGame.put(PAPARAZZI, pap);
 					//String msgIds = games.getString("allMessages");
 
 					// get all messages here
@@ -224,10 +244,12 @@ class Database {
 
 	}
 
-	public void setPaparazzi(String gameName, JSONObject playObj)
+	public void setPapTarget(String gameName, JSONObject playObj, JSONObject tarObj)
 	{
 		
 		String playId = (String) playObj.get(FB_USER_ID);
+		String tarId = (String) tarObj.get(FB_USER_ID);
+		System.out.println(gameName + " Setting pap target " + playId + "  "  + tarId);
 		try {
 			stmt = conn.createStatement();
 			ResultSet games = stmt.executeQuery("select * from Game where " + GAME_RM_NAME + "='" + gameName + "'");
@@ -235,7 +257,7 @@ class Database {
 			{
 				String history = games.getString("papHistory");
 				JSONArray papHistory = Database.parseJSONArrayString(history);
-				List<Integer> papPast = new ArrayList<Integer>(papHistory);
+				List<Long> papPast = new ArrayList<Long>(papHistory);
 				
 				// 
 				String plays = games.getString("playerIds");
@@ -244,14 +266,16 @@ class Database {
 				
 				int playIdx = playerIds.indexOf(playId);
 				
-				papPast.set(playIdx, papPast.get(playIdx) + 1);
+				papPast.set(playIdx, papPast.get(playIdx) + 1L);
 				
 				// set the paparazzi and increment the corresponding index in the
 				// paparazzi history
 				// store back in database
 				String updateStmt = "update Game set paparazzi='"+playId + "'," +
-									"papHistory='" + papPast.toString() + "'" +
-									"where " + GAME_RM_NAME + "='" + gameName + "'";
+									"papHistory='" + papPast.toString() + "'," +
+									"target='" + tarId + "'" + 
+									" where " + GAME_RM_NAME + "='" + gameName + "'";
+				System.out.println("UPDATE pap/target + " + updateStmt);
 				int result = stmt.executeUpdate(updateStmt);
 				if(result < 0)
 				{
@@ -290,7 +314,7 @@ class Database {
 
 		try {
 			//// new fields
-			String sqlInsert = "insert into Game " + "values (?,?,?,?,?,?,?,?,?,?,?,?)";
+			String sqlInsert = "insert into Game " + "values (?,?,?,?,?,?,?,?,?,?,?,?,?)";
 			storeMsg = conn.prepareStatement(sqlInsert);
 
 			Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -307,10 +331,10 @@ class Database {
 			storeMsg.setString(7, maxPlayerCount);
 
 			storeMsg.setNull(8, java.sql.Types.INTEGER);
-			storeMsg.setNull(9, java.sql.Types.INTEGER);
+			storeMsg.setInt(9, 2); // default 2 turns to be pap
 			storeMsg.setInt(10, 0);
-			storeMsg.setNull(11, java.sql.Types.VARCHAR);
-			
+			storeMsg.setString(11, ""); // initial paparazzi is ""
+			storeMsg.setString(12, "");
 			JSONArray initial_pap_history = new JSONArray();
 			
 			long playCt = (Long) gameInfo.get(PLAYER_COUNT);
@@ -319,13 +343,13 @@ class Database {
 			for (long tmp = 0L; tmp < playCt; tmp += 1L) {
 				initial_pap_history.add(0);
 			}
-			storeMsg.setString(12, initial_pap_history.toJSONString());
+			storeMsg.setString(13, initial_pap_history.toString());
 		
 			// later store message or image depending on available data
 			// storeMsg.setString(5, message);
-			System.out.println("The SQL query is: " + sqlInsert); // Echo for
+			System.out.println("The SQL query is: " + storeMsg); // Echo for
 			// debugging
-			System.out.println(storeMsg);
+			//System.out.println(storeMsg);
 			int countInserted = storeMsg.executeUpdate();
 			System.out.println(countInserted + " records inserted into Game.\n");
 			return result;
@@ -866,6 +890,14 @@ class Database {
 
 				oneGame.put(STARTED_GAME, games.getInt(STARTED_GAME));
 				allGames.add(oneGame);
+				
+				String currPap = games.getString(PAPARAZZI);
+				String currTar = games.getString(TARGET);
+				String papHist = games.getString(PAPHISTORY);
+				
+				oneGame.put(PAPARAZZI, getOnePlayer(currPap));
+				oneGame.put(TARGET, getOnePlayer(currTar));
+				oneGame.put(PAPHISTORY, Database.parseJSONArrayString(papHist));
 
 			}
 		} catch (SQLException ex) {
