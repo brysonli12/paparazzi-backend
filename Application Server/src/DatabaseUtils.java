@@ -3,6 +3,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -18,7 +20,9 @@ class ConnectionManager {
 
 	private static Connection createConnection() {
 		try {
-			return DriverManager.getConnection(URL, USER, PASSWORD);
+			Connection c = DriverManager.getConnection(URL, USER, PASSWORD);
+			c.setAutoCommit(true);
+			return c;
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
@@ -41,7 +45,7 @@ class Database {
 	private static final String GAME_PLURAL = "games";
 	public static final String GAME_INFO = "gameInfo";
 	private static final String GAME_DURATION = "gameDuration";
-	private static final String PLAYER_COUNT = "playerCount";
+	public static final String PLAYER_COUNT = "playerCount";
 	private static final String MSG_STATUS = "messagestatus";
 	private static final String PLAYER_SINGULAR = "player";
 	public static final String PLAYER_PLURAL = "players";
@@ -68,6 +72,9 @@ class Database {
 	public static final String PAPHISTORY = "papHistory";
 	public static final String PAPARAZZI = "paparazzi";
 	public static final String TARGET = "target";
+	public static final String START_TIME = "startTime";
+	public static final String TIME_PER_PERSON = "timePerPerson";
+	public static final String MAX_TURNS = "maxTurns";
 
 	public Database() {
 
@@ -122,11 +129,16 @@ class Database {
 			return result;
 		}
 		
+		Long gameDur = (Long)gameInfo.get(GAME_DURATION);
+		Long mills = TimeUnit.MINUTES.toMillis(gameDur);
+		Long timePerGame = mills / (2 * playerArray.size());
+		
 		try {
 			stmt = conn.createStatement();
 			// need to initialize the array of paparazzi scores somewhere
 			// either in createGame and/or add player...
-			String updateIds = "UPDATE Game SET started=1 WHERE gameRoomName='" + gameName + "'";
+			String updateIds = "UPDATE Game SET started=1,startTime="+ System.currentTimeMillis() + "," + 
+								TIME_PER_PERSON + "=" + timePerGame + " WHERE gameRoomName='"+ gameName + "'";
 			System.out.println("starting game ids: " + updateIds);
 			int countUpdated = stmt.executeUpdate(updateIds);
 			if (countUpdated > 0)
@@ -137,6 +149,7 @@ class Database {
 			{
 				result.put("messagestatus", "server busy, try again");
 			}
+			
 			return result;
 
 
@@ -227,6 +240,10 @@ class Database {
 					String pap = games.getString(PAPARAZZI);
 					//JSONObject plays = getOnePlayer(pap);
 					oneGame.put(PAPARAZZI, pap);
+					
+					oneGame.put(START_TIME, games.getLong(START_TIME));
+					oneGame.put(TIME_PER_PERSON, games.getLong(TIME_PER_PERSON));
+					oneGame.put(MAX_TURNS, games.getLong(MAX_TURNS));
 					//String msgIds = games.getString("allMessages");
 
 					// get all messages here
@@ -281,6 +298,7 @@ class Database {
 				{
 					System.out.println("Error updating paparazzi and corresponding  history");
 				}
+				System.out.println(System.currentTimeMillis() + ":  finished updating pap/ target/ history" + result);
 				// for gamelogic thread, pass back first person for paparazzi and target
 				// (for now)
 			}

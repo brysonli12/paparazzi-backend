@@ -33,7 +33,6 @@ public class GameLogicThread implements Runnable{
 				//TODO: CHECK WHO IS PAPARAZZI
 				//IF THERE IS NONE RANDOMLY SELECT ONE
 				if(game.get(Database.PAPARAZZI).equals("")) {
-					System.out.println(game.toString());
 					
 					JSONArray playerInGame = (JSONArray) game.get(Database.PLAYER_PLURAL);
 					JSONArray playerBeenPaparazzi = (JSONArray) game.get(Database.PAPHISTORY);
@@ -54,46 +53,63 @@ public class GameLogicThread implements Runnable{
 					//notify.sendPush(message);
 					continue;
 				}
-				/*
+				
 				//TODO: TIME IS UP
 				//SELECT NEW PAPARAZZI
 				JSONArray playerBeenPaparazzi = (JSONArray) game.get(Database.PAPHISTORY);
-				int totalTurns = 0;
-				int max = 0;
+				long totalTurns = 0;
+				long max = 0;
 				for(int i = 0; i < playerBeenPaparazzi.size(); i++){
-					totalTurns += playerBeenPaparazzi.get(i);
-					if(max < playerBeenPaparazzi[i]){
-						max = playerBeenPaparazzi[i];
+					totalTurns += (Long) playerBeenPaparazzi.get(i);
+					if(max < (Long)playerBeenPaparazzi.get(i)){
+						max = (Long) playerBeenPaparazzi.get(i);
 					}
 				}
 				
-				if(System.currentTimeMillis() - (game.get(STARTTIME) + totalTurns * game.get(TIMEDURATIONPERPERSON)) > 0
-				 	&& totalTurns < game.get(MAXTURNS) * game.get(PLAYERCOUNT)) {
+				JSONObject gameInfo = (JSONObject) game.get(Database.GAME_INFO);
+				JSONArray playerArray = (JSONArray) game.get(Database.PLAYER_PLURAL);
+				long value = System.currentTimeMillis() - (((Long)game.get(Database.START_TIME)) + totalTurns * ((Long)game.get(Database.TIME_PER_PERSON)));
+				
+				System.out.println("TIME " + System.currentTimeMillis());
+				System.out.println("VALUE " + value);
+				System.out.println("TOTAL TURN STUFF " + totalTurns + " " + max + " "  + ((Long)game.get(Database.START_TIME)) + " " + totalTurns * ((Long)game.get(Database.TIME_PER_PERSON)));
+				System.out.println("GET START TIME " + ((Long)game.get(Database.START_TIME)));
+				System.out.println("GET DURATION TIME " + ((Long)game.get(Database.TIME_PER_PERSON)));
+				System.out.println("MAX TURNS " + ((Long)game.get(Database.MAX_TURNS)));
+				System.out.println("PLAYER ARRAY " + playerArray.size());
+				
+				if(System.currentTimeMillis() - ((Long)game.get(Database.START_TIME) + totalTurns * (Long)game.get(Database.TIME_PER_PERSON)) > 0
+				 	&& totalTurns < (Long)game.get(Database.MAX_TURNS) * playerArray.size()) {
 				 	
-					JSONArray playerInGame = game.get(PLAYERS);
+					System.out.println("NEWTARGET NEWTARGET NEWTARGET");
+					
+					JSONArray playerInGame = (JSONArray) game.get(Database.PLAYER_PLURAL);
 					
 					Random rand = new Random();
 					int index = 0;
-					String paparazziPlayer = playerInGame[rand.nextInt(0,playerInGame.size())];
+					JSONObject paparazziPlayer = (JSONObject) playerInGame.get(rand.nextInt(playerInGame.size()));
 					boolean allSame = true;
-					int compare = playerBeenPaparazzi[0];
+					int compare = ((Long) playerBeenPaparazzi.get(0)).intValue();
 					ArrayList<Integer> indicesToSelect = new ArrayList<Integer>();
 					
 					for(int i = 1; i < playerBeenPaparazzi.size(); i++){
-						if(playerBeenPaparazzi[i] != compare){
+						if(((Long) playerBeenPaparazzi.get(i)).intValue() != compare){
 							allSame = false;
-							indiciesToSelect.add(i);
+							indicesToSelect.add(i);
 						}
 					}
 					
 					if(allSame == true){
-						index = rand.nextInt(0,playerInGame.size());
+						index = rand.nextInt(playerInGame.size());
 					}else{
-						index = rand.nextInt(0,indicesToSelect.size());
+						index = rand.nextInt(indicesToSelect.size());
 					}
-				
-					String paparazziPlayer = playerInGame[index];
-					playerBeenPaparazzi[index]++;
+					
+					int index2 = rand.nextInt(playerInGame.size());
+					while(index == index2){
+						index2 = rand.nextInt(playerInGame.size());
+					}
+					JSONObject targetPlayer = (JSONObject) playerInGame.get(index2);
 				
 					util.setPapTarget((String) gameInfo.get(Database.GAME_RM_NAME),paparazziPlayer,targetPlayer);
 					get.remove();
