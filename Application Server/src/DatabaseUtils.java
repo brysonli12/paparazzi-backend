@@ -58,7 +58,7 @@ class Database {
 	private static final String GAME_ID = "GameId";
 	private static final String LOWERCASE_GAME_ID = "gameId";
 	private static final String TIMESTAMP = "timestamp";
-	private static final String FB_USER_ID = "facebookUserId";
+	public static final String FB_USER_ID = "facebookUserId";
 	public static final String GAME_RM_NAME = "gameRoomName";
 	private static final String IMAGE_ID = "imageId";
 	private static final String RATING = "rating";
@@ -75,6 +75,8 @@ class Database {
 	public static final String START_TIME = "startTime";
 	public static final String TIME_PER_PERSON = "timePerPerson";
 	public static final String MAX_TURNS = "maxTurns";
+	public static final String STATE = "state";
+	public static final String START_LAST_RATING = "lastRateTime";
 
 	public Database() {
 
