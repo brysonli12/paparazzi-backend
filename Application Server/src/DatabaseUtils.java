@@ -53,8 +53,8 @@ class Database {
 	private static final String MESSAGE = "message";
 	private static final String MESSAGE_PLURAL = "messages";
 	private static final String CAPITAL_MESSAGE = "Message";
-	private static final String SENT_FROM = "sentFrom";
-	private static final String IMAGE = "image";
+	public static final String SENT_FROM = "sentFrom";
+	public static final String IMAGE = "image";
 	private static final String GAME_ID = "GameId";
 	private static final String LOWERCASE_GAME_ID = "gameId";
 	private static final String TIMESTAMP = "timestamp";
@@ -62,7 +62,7 @@ class Database {
 	public static final String GAME_RM_NAME = "gameRoomName";
 	private static final String IMAGE_ID = "imageId";
 	private static final String RATING = "rating";
-	private static final String RATING_PLURAL = "ratings"; // internal and other
+	public static final String RATING_PLURAL = "ratings"; // internal and other
 	private static final String FIRST_NAME = "firstName";
 	private static final String LAST_NAME = "lastName";
 	private static final String LOGIN_STATUS = "loginStatus";
@@ -75,8 +75,8 @@ class Database {
 	public static final String START_TIME = "startTime";
 	public static final String TIME_PER_PERSON = "timePerPerson";
 	public static final String MAX_TURNS = "maxTurns";
-	public static final String STATE = "state";
-	public static final String START_LAST_RATING = "lastRateTime";
+	//public static final String STATE = "started";
+	//public static final String START_LAST_RATING = "lastRateTime";
 
 	public Database() {
 

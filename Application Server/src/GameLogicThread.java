@@ -23,6 +23,11 @@ public class GameLogicThread implements Runnable{
 			//TODO: ADD INTERFACE TO CONSTANTLY GET NEW STARTED GAMES
 			//DO NOT DUPLICATE GAMES ALREADY IN THE LIST
 			//THAT LOGIC MUST BE DONE IN DATABASE UTILS
+			
+			//TODO: NEED TO RESET THE WINNER WHEN GAME STARTS
+			//DO THIS IN DATABASEUTILS IN THE STARTGAME FUNCTION
+			//SET STATE=2 NEED TO ALSO UPDATE LAST RATING TIMER IN SQL
+			
 			Database util = new Database();
 			PushNotifier notify = new PushNotifier();
 			util.fetchStarted(startedGames);
@@ -151,12 +156,12 @@ public class GameLogicThread implements Runnable{
 						
 						for(int j = 0; j < getAllImageMessages.size(); j++) {
 							JSONObject imageMessage = (JSONObject) getAllImageMessages.get(j);
-							JSONObject sentFromPlayer = (JSONObject) imageMessage.get(Database.SENTFROM);
+							JSONObject sentFromPlayer = (JSONObject) imageMessage.get(Database.SENT_FROM);
 							String sentFromPlayerId = (String) sentFromPlayer.get(Database.FB_USER_ID);
 							
 							if(playerId.equals(sentFromPlayerId)) {
 								JSONObject image = (JSONObject) imageMessage.get(Database.IMAGE);
-								JSONArray imageRating = (JSONArray) image.get(Datbase.RATINGS);
+								JSONArray imageRating = (JSONArray) image.get(Database.RATING_PLURAL);
 								for(int k = 0; k < playerInGame.size(); k++) {
 									scoreTally[i] += (Long) imageRating.get(k);
 								}
