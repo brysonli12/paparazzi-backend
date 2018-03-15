@@ -68,14 +68,14 @@ class Database {
 	private static final String LOGIN_STATUS = "loginStatus";
 	private static final String IMAGE_CONTENT = "imageContent";
 	private static final String PLAYER_IDS = "playerIds";
-	private static final String STARTED_GAME = "started";
+	public static final String STARTED_GAME = "started";
 	public static final String PAPHISTORY = "papHistory";
 	public static final String PAPARAZZI = "paparazzi";
 	public static final String TARGET = "target";
 	public static final String START_TIME = "startTime";
 	public static final String TIME_PER_PERSON = "timePerPerson";
 	public static final String MAX_TURNS = "maxTurns";
-	public static final String STATE = Database.START_TIME;
+	//public static final String STATE = Database.STARTED_GAME;
 	public static final String START_LAST_RATING = "lastRateTime";
 	public static final String TARGET_PLAYER = "targetPlayer"; // for use in Image table
 	public static final String WINNER = "winner";
@@ -127,12 +127,19 @@ class Database {
 		String gameName = (String)gameInfo.get(GAME_RM_NAME);
 		JSONObject result = new JSONObject();
 		JSONArray playerArray = (JSONArray) aGame.get(PLAYER_PLURAL);
-
+		
 		if(playerArray.size() < 2){
 			result.put("messagestatus", "not enough players");
 			return result;
 		}
-
+		
+		int pArrSize = playerArray.size();
+		List<Integer> pHist = new ArrayList<Integer>();
+		for (int i = 0; i < pArrSize; i++)
+		{
+			pHist.add(0);
+		}
+		
 		Long gameDur = (Long)gameInfo.get(GAME_DURATION);
 		Long mills = TimeUnit.MINUTES.toMillis(gameDur);
 		Long timePerGame = mills / (2 * playerArray.size());
@@ -142,7 +149,10 @@ class Database {
 			// need to initialize the array of paparazzi scores somewhere
 			// either in createGame and/or add player...
 			String updateIds = "UPDATE Game SET started=1,startTime="+ System.currentTimeMillis() + "," + 
-					TIME_PER_PERSON + "=" + timePerGame + " WHERE gameRoomName='"+ gameName + "'";
+					TIME_PER_PERSON + "=" + timePerGame + "," + 
+					PAPHISTORY + "='" + pHist.toString() + "',"+
+					PAPARAZZI + "='', " + 
+					TARGET + "='' WHERE gameRoomName='"+ gameName + "'";
 			System.out.println("starting game ids: " + updateIds);
 			int countUpdated = stmt.executeUpdate(updateIds);
 			if (countUpdated > 0)
@@ -168,7 +178,7 @@ class Database {
 
 	}
 
-	public void fetchImage(String gameName, JSONArray messages)
+	public void fetchImages(String gameName, JSONArray messages)
 	{
 		// get started time
 		PreparedStatement fetchMsg = null;
@@ -232,7 +242,7 @@ class Database {
 		try {
 			stmt = conn.createStatement();
 
-			String updateStmt = "update Game set " + WINNER + "="+ playId + "," +
+			String updateStmt = "update Game set " + WINNER + "="+ playId +
 					" where " + GAME_RM_NAME + "='" + gameName + "'";
 			int result = stmt.executeUpdate(updateStmt);
 			if(result < 0)
@@ -253,9 +263,15 @@ class Database {
 	{
 		try {
 			stmt = conn.createStatement();
-
-			String updateStmt = "update Game set " + STARTED_GAME + "="+state + "," +
+				
+		
+			String updateStmt = "update Game set " + STARTED_GAME + "="+state +
 					" where " + GAME_RM_NAME + "='" + gameName + "'";
+			
+			if (state == 2)
+				updateStmt = "update Game set " + STARTED_GAME + "="+state + "," + 
+						START_LAST_RATING + "=" + System.currentTimeMillis() + 
+						" where " + GAME_RM_NAME + "='" + gameName + "'";
 			int result = stmt.executeUpdate(updateStmt);
 			if(result < 0)
 			{
@@ -310,11 +326,12 @@ class Database {
 		List<String> existing = new ArrayList<String>();
 		for (JSONObject aGame: startedGames)
 		{
-			existing.add((String)aGame.get(GAME_RM_NAME));
+			JSONObject gameInfo = (JSONObject)aGame.get(GAME_INFO);
+			existing.add((String)gameInfo.get(GAME_RM_NAME));
 		}
 		try {
 			stmt = conn.createStatement();
-			ResultSet games = stmt.executeQuery("select * from Game where started=1");
+			ResultSet games = stmt.executeQuery("select * from Game where started=1 or started=2");
 			while(games.next())
 			{
 				String currGame = games.getString(GAME_RM_NAME);
@@ -336,6 +353,7 @@ class Database {
 					JSONArray pIds = Database.parseJSONArrayString(playIds);
 					JSONArray playersInGame = getPlayers(pIds);
 
+					oneGame.put(START_LAST_RATING, games.getLong(START_LAST_RATING));
 					oneGame.put(GAME_INFO, gameInf);
 					oneGame.put(PLAYER_PLURAL, playersInGame);
 					oneGame.put(LOWERCASE_GAME_ID, Long.parseLong(games.getString(LOWERCASE_GAME_ID)));
@@ -343,6 +361,7 @@ class Database {
 					String papHist = games.getString(PAPHISTORY);
 					JSONArray pHist = Database.parseJSONArrayString(papHist);
 
+					System.out.println("FETCHED PAP HIST (DB) " + papHist + "  " + startedGames.size());
 					oneGame.put(PAPHISTORY, pHist);
 
 					String pap = games.getString(PAPARAZZI);
@@ -352,6 +371,7 @@ class Database {
 					oneGame.put(START_TIME, games.getLong(START_TIME));
 					oneGame.put(TIME_PER_PERSON, games.getLong(TIME_PER_PERSON));
 					oneGame.put(MAX_TURNS, games.getLong(MAX_TURNS));
+					oneGame.put(STARTED_GAME, games.getLong(STARTED_GAME));
 					//String msgIds = games.getString("allMessages");
 
 					// get all messages here
@@ -440,7 +460,7 @@ class Database {
 
 		try {
 			//// new fields
-			String sqlInsert = "insert into Game " + "values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+			String sqlInsert = "insert into Game " + "values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 			storeMsg = conn.prepareStatement(sqlInsert);
 
 			Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -473,6 +493,7 @@ class Database {
 			storeMsg.setString(13, initial_pap_history.toString());
 			
 			storeMsg.setNull(14, java.sql.Types.VARCHAR);
+			storeMsg.setNull(15, java.sql.Types.BIGINT);
 
 			// later store message or image depending on available data
 			// storeMsg.setString(5, message);

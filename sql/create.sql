@@ -24,6 +24,7 @@ CREATE TABLE Game (
 	target varchar(30),
 	papHistory varchar(200),
 	winner varchar(30),
+	lastRateTime Bigint,
 	-- get image ids past the start time
 
 	PRIMARY KEY(gameId)
