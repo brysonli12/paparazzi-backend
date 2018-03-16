@@ -57,3 +57,7 @@ Refactor DataBaseUtils
 3/8/2018:
 -Worked on and finished starting game
 -Worked on initial steps of Game Logic (already have logic written down, mostly just converting to code)
+
+3/15/2018:
+-Added edge case handling for Game Logic (Starting game, ending game, rating time)
+-Squished major bugs in Game Logic from last week
