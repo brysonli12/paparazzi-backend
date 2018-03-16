@@ -23,6 +23,8 @@ CREATE TABLE Game (
 	paparazzi varchar(30), -- or ID of player
 	target varchar(30),
 	papHistory varchar(200),
+	winner varchar(30),
+	lastRateTime Bigint,
 	-- get image ids past the start time
 
 	PRIMARY KEY(gameId)
@@ -41,7 +43,7 @@ CREATE TABLE Messages (
 	msgId varchar(30),
 	sentFrom varchar(30), -- userid
 	gameId varchar(20),
-	sendTime datetime,
+	sendTime Bigint,
 	message varchar(50),
 	image varchar(30) 
 	-- key for this could be userId or gameId
