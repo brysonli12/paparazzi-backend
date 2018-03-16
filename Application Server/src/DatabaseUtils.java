@@ -1047,6 +1047,8 @@ class Database {
 				JSONArray playersInGame = getPlayers(pIds);
 
 				oneGame.put(GAME_INFO, gameInf);
+				
+				oneGame.put(WINNER, getOnePlayer((String)games.getString(WINNER)));
 				oneGame.put(PLAYER_PLURAL, playersInGame);
 				oneGame.put(LOWERCASE_GAME_ID, Long.parseLong(games.getString(LOWERCASE_GAME_ID)));
 
